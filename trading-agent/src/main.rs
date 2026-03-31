@@ -16,7 +16,7 @@ use adapters::signer::SimpleSigner;
 use adapters::validation::{ArtifactValidation, SharedLogEntries};
 use application::agent::TradingAgent;
 use domain::risk::{PositionState, RiskConfig};
-use domain::strategy::{MomentumVolConfig, StrategyConfig, STRATEGY_DISPLAY_NAME};
+use domain::strategy::{StrategyConfig, STRATEGY_DISPLAY_NAME};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -48,26 +48,19 @@ async fn main() -> anyhow::Result<()> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(10);
 
-    let momentum_cfg = MomentumVolConfig {
-        lookback: ohlc_lookback,
-        momentum_threshold_pct: std::env::var("AGENT_MOMENTUM_THRESHOLD_PCT")
+    let strategy_cfg = StrategyConfig {
+        momentum_threshold: std::env::var("AGENT_STRATEGY_MOMENTUM_THRESHOLD")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(0.00015),
-        volatility_cv_low: std::env::var("AGENT_VOL_CV_LOW")
+            .unwrap_or(50.0),
+        volatility_min: std::env::var("AGENT_STRATEGY_VOL_MIN")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(0.00008),
-        volatility_cv_high: std::env::var("AGENT_VOL_CV_HIGH")
+            .unwrap_or(5.0),
+        volatility_max: std::env::var("AGENT_STRATEGY_VOL_MAX")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(0.025),
-    };
-
-    let strategy_cfg_hybrid = StrategyConfig {
-        momentum_threshold: momentum_cfg.momentum_threshold_pct,
-        volatility_min: momentum_cfg.volatility_cv_low,
-        volatility_max: momentum_cfg.volatility_cv_high,
+            .unwrap_or(500.0),
     };
 
     let risk_config = RiskConfig {
@@ -92,9 +85,9 @@ async fn main() -> anyhow::Result<()> {
         "claude" => DecisionDriver::Claude(adapters::claude_decision::ClaudeDecision),
         "adk" => DecisionDriver::Adk(Arc::new(adapters::adk_decision::AdkDecision::new().await?)),
         "hybrid" => DecisionDriver::Hybrid(Arc::new(
-            adapters::hybrid_decision::HybridAdkDecision::new(strategy_cfg_hybrid.clone()).await?,
+            adapters::hybrid_decision::HybridAdkDecision::new(strategy_cfg.clone()).await?,
         )),
-        _ => DecisionDriver::Momentum(MomentumVolatilityDecision::new(momentum_cfg)),
+        _ => DecisionDriver::Momentum(MomentumVolatilityDecision::new(strategy_cfg)),
     };
 
     let log_entries: SharedLogEntries = Arc::new(std::sync::Mutex::new(Vec::new()));

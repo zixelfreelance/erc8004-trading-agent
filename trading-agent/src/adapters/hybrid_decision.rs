@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use crate::domain::model::{Decision, MarketData};
-use crate::domain::strategy::{compute_decision, StrategyConfig};
+use crate::domain::strategy::{compute_decision, market_snapshot_from, StrategyConfig};
 use crate::ports::decision::DecisionPort;
 
 use super::adk_decision::AdkDecision;
@@ -24,7 +24,8 @@ impl HybridAdkDecision {
 #[async_trait]
 impl DecisionPort for HybridAdkDecision {
     async fn decide(&self, data: &MarketData) -> anyhow::Result<Decision> {
-        let prior = compute_decision(data, &self.strategy);
+        let snapshot = market_snapshot_from(data);
+        let prior = compute_decision(&snapshot, &self.strategy);
         let action_s = match prior.action {
             crate::domain::model::Action::Buy => "Buy",
             crate::domain::model::Action::Sell => "Sell",
