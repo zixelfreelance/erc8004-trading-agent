@@ -1,7 +1,8 @@
 # AI Trading Agents hackathon — Technology & Access (extracted)
 
 **Source:** LabLab event copy (“Technology & Access”); align URLs with the **live** hackathon page.  
-**Captured:** 2026-03-31 (user paste)
+**Captured:** 2026-03-31 (user paste)  
+**Related:** [`lablab-ai-trading-agents-rules-research.md`](lablab-ai-trading-agents-rules-research.md) — judging, submission TBA, Surge eligibility (no secrets in repo).
 
 This hackathon has **two equal challenges**. Teams may enter **one or both**. Requirements below are **per challenge** unless noted.
 
