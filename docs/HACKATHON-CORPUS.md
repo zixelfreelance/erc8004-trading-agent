@@ -25,6 +25,7 @@ This repo is a **structured notebook** for the **LabLab “AI Trading Agents”*
 | **VII** | Official EIP digest | [`extracted/eip-8004-trustless-agents-snapshot.md`](extracted/eip-8004-trustless-agents-snapshot.md) |
 | **Appendix A** | Complete file manifest | [§ Appendix A](#appendix-a--complete-file-manifest-tracked) |
 | **Appendix B** | Folder diagram (expanded) | [§ Appendix B](#appendix-b--folder-diagram-expanded) |
+| **Appendix C** | Map to “Battle Plan” HTML | [§ Appendix C](#appendix-c--map-to-hackathon-battle-plan-html-q2-2026) |
 
 ---
 
@@ -182,6 +183,25 @@ hack01/
 ├── kraken-cli/                # gitignored — separate repository
 └── awesome-erc8004/           # gitignored — separate repository
 ```
+
+---
+
+## Appendix C — Map to “Hackathon Battle Plan” HTML (Q2 2026)
+
+External one-pager title: *Hackathon Battle Plan — Q2 2026* (five-target roadmap, monorepo diagram, timeline, judge cheat sheet). **`hack01` is not that monorepo**; it is the **research corpus + local tool clones** for the **LabLab / Surge / Kraken / ERC-8004** thread.
+
+| HTML `h2` / block | What it is | How **`hack01`** maps today | Gap |
+|-------------------|------------|-----------------------------|-----|
+| **§1 — The Five Targets** | Five hackathon cards | **Primary:** **Card #1 — AI Trading Agents** (lablab × Surge × Kraken). Extractions + `kraken-cli/` + `awesome-erc8004/` + EIP snapshot **directly support** that card. **Cards #2–#5** (Four.Meme, Solana Frontier, Ontology, Arc×Circle) are **not** represented in this repo’s files. | Add separate repos or monorepo root per battle plan; do not pretend `hack01` covers BNB/Solana/Ontology/Arc unless you add artifacts. |
+| **§2 — Shared Codebase Architecture** | `packages/agent-brain`, `agent-identity`, `chain-adapters`, `apps/*` | **Out of scope.** Battle plan describes a **TypeScript monorepo**; `hack01` only has **`docs/`** + **ignored** upstream clones. | Initialize `hackathon-q2` (or rename) elsewhere, or fold corpus into that monorepo as `docs/research/`. |
+| **§3 — Execution Timeline** | Day-by-day checklist | **Reference only.** No automation here; timeline lives in your HTML/PM tool. | Track tasks in issues; link to this corpus for specs. |
+| **§4 — What Judges Want** | Per-hackathon table | **Row: AI Trading Agents** ↔ [`lablab-ai-trading-agents-technology-access.md`](extracted/lablab-ai-trading-agents-technology-access.md), Surge extracts, Kraken blog, EIP snapshot. **Caution:** the HTML card mixes **“risk-adjusted / Sharpe / drawdown / ERC-8004”** into one list; **official** LabLab copy splits **Kraken track (net PnL + social)** vs **ERC-8004 track (risk-adjusted, drawdown, validation)**. Reconcile before you optimize metrics. | Pull latest judging text from lablab + Surge; avoid a single PnL story if you compete on both tracks. |
+| **§5 — lablab.ai Universal Scoring** | Four pillars | **Conceptual overlap** with how you pitch #1/#5 on LabLab; this repo does **not** yet store a dedicated “judging criteria” extract beyond Technology & Access. | Optional: add `extracted/lablab-judging-criteria.md` from the event page. |
+| **§6 — Submission Checklist** | Universal deliverables | **Orthogonal** — process checklist, not stored as a file here (could mirror into `docs/SUBMISSION-CHECKLIST.md` later). | — |
+| **§7 — Risk Map** | Spread, Solana time, etc. | **Partial overlap** with [Part VI risks](#part-vi--way-ahead-expanded) in this corpus (EIP draft, date drift, keys). HTML adds **multi-hackathon triage** — keep in battle plan, not necessarily in `hack01`. | — |
+| **§8 — Next Steps** | Registrations, turbo scaffold | **Local clone piece:** “Kraken CLI” ↔ `kraken-cli/` + [`kraken-cli-announcement.md`](extracted/kraken-cli-announcement.md). **Monorepo** ↔ not in `hack01` yet. | Run registrations outside git; never commit secrets. |
+
+**One-line answer:** **`hack01` targets the *intel + tooling footnotes* for HTML §1 Card #1 and the ERC-8004 / Kraken portions of §4’s first row — not §2’s monorepo, not hacks #2–#5, not the timeline/checklists themselves.**
 
 ---
 
