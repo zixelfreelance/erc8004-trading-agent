@@ -16,6 +16,7 @@ use adapters::signer::{Eip712Signer, SignerDriver, SimpleSigner};
 use adapters::validation::{ArtifactValidation, SharedLogEntries};
 use application::agent::TradingAgent;
 use domain::metrics;
+use domain::regime::RegimeDetector;
 use domain::risk::{PositionState, RiskConfig};
 use domain::strategy::{StrategyConfig, STRATEGY_DISPLAY_NAME};
 
@@ -147,6 +148,11 @@ async fn main() -> anyhow::Result<()> {
         SignerDriver::Simple(SimpleSigner::new(signing_key))
     };
 
+    let atr_stop_multiplier: f64 = std::env::var("AGENT_ATR_STOP_MULTIPLIER")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(1.5);
+
     let agent = TradingAgent {
         market,
         decision,
@@ -159,6 +165,9 @@ async fn main() -> anyhow::Result<()> {
         agent_id,
         intent_amount,
         metrics: agent_metrics,
+        regime: std::sync::Mutex::new(RegimeDetector::with_defaults()),
+        atr_stop_price: std::sync::Mutex::new(None),
+        atr_stop_multiplier,
     };
 
     let interval_secs: u64 = std::env::var("AGENT_INTERVAL_SECS")
