@@ -5,6 +5,15 @@
 **Companion in this repo:** [`lablab-ai-trading-agents-technology-access.md`](lablab-ai-trading-agents-technology-access.md) (technology requirements).  
 **Assembled:** 2026-03-31 from organizer-facing copy + community research notes.
 
+## 0. Hackathon timeline (captured detail)
+
+| Milestone | When |
+|-----------|------|
+| **Start** | **March 30, 2026** (exact clock on LabLab / kickoff — confirm in dashboard) |
+| **End** | **April 12, 2026**, **7:30 PM Iran Standard Time (IRST, UTC+3:30)** |
+
+**Note:** LabLab may also show a countdown in **your** profile timezone; treat the **official submission deadline** in the platform as final if it differs from this note. **Approx. UTC** for the stated end: Apr 12, 2026 **16:00 UTC** (7:30 PM IRST, no Iranian DST in recent years).
+
 ### How to read this file
 
 | Tag | Meaning |
