@@ -1,238 +1,324 @@
-# Hackathon project report — trading agent & dashboard
+# Hackathon source of truth — trustless AI trading agents
 
 **Workspace:** `/Users/bm/hack01`  
-**Primary deliverables:** `trading-agent` (Rust), `trading-dashboard` (SvelteKit), local `adk-rust` integration for LLM-assisted modes.  
-**Stated hackathon context (from crate metadata):** LabLab / Kraken-oriented CLI and agent shell.
+**Primary code:** `trading-agent` (Rust, hexagonal), `trading-dashboard` (SvelteKit), `adk-rust` (LLM/agent paths).  
+**External canonical spec:** [EIP-8004: Trustless Agents](https://eips.ethereum.org/EIPS/eip-8004) — on-chain identity, reputation, and validation registries for autonomous agents.
+
+This document is the **single narrative and requirements map** for the team: vision, mission, sponsor challenges, ERC-8004 + Kraken CLI synergy, current implementation, gaps, and research prompts.
 
 ---
 
-## 1. Vision
+## 1. Mission (north star)
 
-Build a **credible, inspectable autonomous trading agent** that:
+**Design, build, and deploy trustless AI trading agents** that:
 
-- Connects to **Kraken** market data and **paper-style execution** suitable for demos and judging.
-- Supports **multiple decision backends** (rules, Claude, Google ADK, hybrid) behind one clean domain flow.
-- Exposes a **live audit trail** (HTTP JSON logs) and a **dashboard** so judges and teammates see reasoning, PnL, and drawdown—not a black box.
+1. **Safely interact with capital** — hard limits, sandboxes, and circuit breakers; AI treated as untrusted input.  
+2. **Execute strategies** — real programmatic trading and measurement (Kraken CLI / API path per challenge rules).  
+3. **Demonstrate transparent behavior** — auditable decisions, signed intents, validation artifacts, and explainable logs.
 
-Long-term vision: a **template for responsible agentic finance**—risk gates first, signed intents, reproducible logs, and swappable “brains” without rewriting the core loop.
-
----
-
-## 2. Mission (hackathon scope)
-
-| Objective | Success signal |
-|-----------|----------------|
-| **Working demo loop** | Agent ticks on a schedule, fetches OHLC/price, decides, executes (paper), logs. |
-| **Explainability** | Each tick has action, confidence, reasoning, risk overrides, and performance snapshot in logs. |
-| **Differentiation** | At least one **LLM or ADK path** (`AGENT_DECISION=claude|adk|hybrid`) plus rule baseline (`momentum`). |
-| **Polished story** | Dashboard charts + narrative: strategy, risk policy, and failure modes. |
-| **Operational clarity** | Env-driven config, single binary, documented ports and endpoints. |
+**Critical problem (reframed):** Agents fail in finance without **verifiable identity** (who acted?), **enforced constraints** (what is allowed?), and **auditable behavior** (can we trust the trail?). The winning build treats **trust as a product feature**, not a side effect.
 
 ---
 
-## 3. Product context (what the code actually does)
+## 2. Vision
 
-1. **Market:** `KrakenMarket` loads pair data and OHLC (interval and lookback configurable via env).
-2. **Decision:** Pluggable driver—momentum/volatility rules, Claude, ADK, or hybrid (rules + ADK).
-3. **Risk:** Domain layer applies drawdown cap, min confidence for trades, and single-position rules before execution.
-4. **Intent & signing:** `build_intent` + `SimpleSigner` produce auditable signed artifacts (demo-oriented).
-5. **Execution:** `KrakenPaperExecution` simulates fills and balance updates for the performance tracker.
-6. **Observability:** Axum server serves **`GET /logs`**; the Svelte app polls and visualizes PnL/drawdown with Chart.js.
+Ship a **combined-track** story where:
 
-This is intentionally **demo- and learning-first**: emphasize transparency, safety rails, and architecture over unverifiable live-alpha claims.
+- **Execution intelligence** lives off-chain (rules, LLMs, ADK) but **never bypasses** risk and verification gates.  
+- **Kraken CLI** (or equivalent Kraken programmatic access) is the **execution surface** for the Kraken challenge: market data + orders, build-in-public progress.  
+- **EIP-8004** is the **trust surface** for the ERC-8004 challenge: agent identity on the Identity Registry, reputation from outcomes, validation artifacts for intents, risk checks, and checkpoints — operating within the **hackathon capital sandbox** (vault + risk router) when required.
 
----
-
-## 4. Technical stack
-
-| Layer | Technology | Role |
-|-------|------------|------|
-| Agent runtime | Rust 2021, Tokio | Async tick loop, concurrency |
-| HTTP API | Axum, tower-http (CORS) | Log endpoint for dashboard |
-| LLM / agents | `adk-rust` (path dep), optional Claude adapter | ADK / hybrid / Claude decision paths |
-| Serialization / time | serde, serde_json, chrono | Intents, logs, timestamps |
-| Config | dotenvy, env vars | 12-factor style tuning without recompiles |
-| Frontend | SvelteKit 2, Vite 6, TypeScript strict | Dashboard SPA |
-| UI charts | Chart.js 4 | PnL and drawdown series |
-| Exchange | Kraken (REST-style adapters in code) | Market + paper execution |
-
-**Package managers (team norms):** `pnpm` for Node, `cargo` for Rust (per project preferences).
+Long-term: a **proto–financial infrastructure layer for AI agents** — separate **intelligence**, **trust**, and **execution**, with rules enforced where judges can verify them (chain + artifacts), not only in comments or README claims.
 
 ---
 
-## 5. Repository layout (high signal)
+## 3. Official hackathon structure (two equal challenges)
+
+Teams may enter **one** challenge, **the other**, or **both** in a single submission. Combined submissions can win prizes from **both** tracks.
+
+### 3.1 Kraken challenge
+
+| Expectation | Notes |
+|-------------|--------|
+| Use **Kraken CLI** as the AI-native CLI for programmatic trading | Retrieve market data, execute trades per official rules |
+| **AI-driven** strategies | Signals + automation; align repo modes (`momentum`, `claude`, `adk`, `hybrid`) with pitch |
+| **Build in public** | Development progress shared as part of hackathon culture |
+| **Ranking** | Emphasis on **net PnL** during the competition period (plus any published tie-breakers) |
+| **Prizes** | Additional Kraken-specific prizes on top of main pool |
+
+### 3.2 ERC-8004 challenge
+
+| Expectation | Notes |
+|-------------|--------|
+| **Register identity** on the **ERC-8004 Identity Registry** | Tie every action to an on-chain agent identity |
+| **Reputation** | Measurable, objective outcomes over time |
+| **Validation artifacts** | Trade intents, risk checks, strategy checkpoints — verifiable trail |
+| **Capital sandbox** | Operate through the **provided vault and risk router** so performance is measurable on-chain in **stablecoin terms** |
+| **Ranking** | **Risk-adjusted** profitability, **drawdown control**, **validation quality** — not raw PnL alone |
+
+### 3.3 Combined submission (recommended positioning)
+
+**One closed-loop system:**
+
+`EIP-8004 identity + reputation + validation` → `signed, risk-gated intents` → `Kraken CLI execution` → `outcomes feed reputation and dashboards`
+
+Pitch line (internal): *A verifiable financial agent with on-chain identity, enforced risk constraints, and transparent execution — not “an AI bot that trades.”*
+
+---
+
+## 4. Why ERC-8004 (EIP-8004) + Kraken CLI together
+
+You cannot put full AI + low-latency exchange logic entirely on-chain. The **workable pattern** is **hybrid**:
+
+| Layer | Role |
+|-------|------|
+| **On-chain (EIP-8004)** | Agent NFT / identity, policy hooks, reputation updates, validation registry references, sandbox vault compliance |
+| **Off-chain brain** | Models, indicators, LLM/ADK decisions — output structured **proposals** only |
+| **Verifier / gate** | Validates signatures, schema, limits; aligns with risk router rules before any order |
+| **Execution (Kraken CLI)** | The only path to live market actions after approval — **no direct “model → exchange”** shortcut |
+
+**EIP-8004 (high level, per EIP):** Composable registries for **identity**, **reputation**, and **validation** so agents are first-class, verifiable economic actors. Reference implementation and networks: see [eip-8004-contracts](https://github.com/erc-8004/erc-8004-contracts) and the EIP text.
+
+**Kraken CLI:** Operational layer — **DevOps-style** trading automation, data access, and scripting. It does **not** replace on-chain trust; it **implements** approved execution off-chain.
+
+**The bridge (mandatory in a real combined build):** A service (Rust, Node, or Python) that:
+
+1. Subscribes to chain events / registry state / sandbox policy  
+2. Accepts **signed intents** from the agent core  
+3. Calls **Kraken CLI** (or API) only when **on-chain + risk-router + local policy** agree  
+4. Emits **validation artifacts** and updates reputation inputs per spec
+
+Without this bridge, “token triggers CLI” remains a slide-deck idea, not a demo.
+
+---
+
+## 5. Trust model (what “trustless” actually means here)
+
+Honest framing for judges:
+
+- **Trustless** = cryptographic and **on-chain enforcement of constraints** + **verifiable artifacts**; not “no humans” and not “decentralized exchange.”  
+- **CEX execution** (Kraken) is **centralized**; trustlessness applies to **identity, policy, audit trail, and sandbox math** — partial but valuable.  
+- **AI is unreliable** — sandbox it: confidence floors, drawdown stops, whitelisted pairs, max size, circuit breakers.
+
+**Non-negotiables for a strong ERC-8004 story:**
+
+- Structured decision payload (action, pair, size, confidence, timestamp, `agent_id`)  
+- **Signature** (or protocol-prescribed validation) over that payload  
+- **Risk validation result** stored or referenced where judges can inspect  
+- **Execution receipt** correlated back to the intent
+
+This repo already moves in that direction with **domain risk**, **intent builder**, and **signer**; the gap is **EIP-8004 registration**, **sandbox integration**, and **on-chain artifact commitment** (see Section 8).
+
+---
+
+## 6. Current codebase (what exists today)
+
+1. **Market:** `KrakenMarket` — pair data and OHLC (interval / lookback via env).  
+2. **Decision:** `DecisionDriver` — `momentum`, `claude`, `adk`, `hybrid`.  
+3. **Risk:** `domain/risk.rs` — drawdown cap, min confidence for trades, single-position semantics.  
+4. **Intent & signing:** `intent_builder` + `SimpleSigner` — demo-oriented structured + signed artifacts.  
+5. **Execution:** `KrakenPaperExecution` — **simulated** fills and balance for safe iteration (may **not** satisfy “real trades only” for final Kraken submission — confirm rules).  
+6. **Observability:** Axum **`GET /logs`**; dashboard polls and charts PnL / drawdown (Chart.js).
+
+**Design patterns:** Hexagonal **ports & adapters**, **decision driver** strategy, **application service** (`TradingAgent::run_once`), **validation/logging adapter**, Svelte 5 **runes** on the UI.
+
+---
+
+## 7. Technical stack (as implemented + extensions)
+
+| Layer | Now | Likely additions for full combined track |
+|-------|-----|------------------------------------------|
+| Agent core | Rust, Tokio, anyhow | Keep; add CLI wrapper or sidecar for Kraken CLI if not in-process |
+| HTTP | Axum, CORS | Optional: webhook for chain events |
+| LLM / agents | adk-rust, Claude adapter | Same |
+| Frontend | SvelteKit 2, Vite 6, TS strict, Chart.js | Optional: on-chain tx links, artifact viewer |
+| On-chain | — | Solidity/Foundry or Hardhat; EIP-8004 registry clients |
+| Execution | Paper adapter | Kraken CLI or REST **behind** gate; record receipts |
+
+**Team norms:** `pnpm` (Node), `cargo` (Rust).
+
+---
+
+## 8. Gap analysis — repo vs challenges
+
+| Requirement | Kraken track | ERC-8004 track | This repo today |
+|-------------|--------------|----------------|-----------------|
+| Kraken market data | Yes | Optional via execution | Yes (adapter) |
+| Programmatic / CLI execution | Yes | After sandbox approval | Paper execution only |
+| AI-driven strategy | Yes | Yes | Yes (multi-mode) |
+| Build in public | Yes | Check brief | Process, not code |
+| Identity registry registration | — | Yes | Not implemented |
+| Reputation from outcomes | — | Yes | Not on-chain |
+| Validation artifacts (intents, risk, checkpoints) | Partially via logs | Yes, formal | HTTP logs; not EIP-8004 validation registry |
+| Sandbox vault + risk router | — | Yes | Not integrated |
+| Ranking focus | Net PnL | Risk-adjusted + drawdown + validation | Dashboard supports narrative |
+
+**Priority order for a combined win:** (1) **Sandbox + risk router compliance**, (2) **real or rule-compliant Kraken execution path**, (3) **EIP-8004 identity + validation hooks**, (4) polish PnL story without sacrificing drawdown discipline.
+
+---
+
+## 9. Phased build plan (minimal → full story)
+
+**Phase A — Controlled agent (fastest demo)**  
+Rule-based or simple AI + strict risk + rich logs + dashboard. Prove the **pipeline** and **transparency**.
+
+**Phase B — Kraken track hardening**  
+Swap or add execution adapter: **Kraken CLI** subprocess or API with keys in env; retain **intent → verify → execute** ordering. Build-in-public artifacts (commits, thread, or devlog per rules).
+
+**Phase C — ERC-8004 track**  
+Register agent; commit or reference **validation payloads** per EIP-8004 flows; route capital via **sandbox vault**; update reputation inputs from measured outcomes.
+
+**Phase D — Combined narrative**  
+End-to-end demo: show **identity** → **signed intent** → **risk router OK** → **Kraken execution** → **log + reputation/dashboard**.
+
+---
+
+## 10. Killer features (pick 1–2 for scope)
+
+1. **Proof-of-decision** — For each trade: inputs, reasoning, signed intent, risk outcome, execution receipt, PnL delta (matches “validation quality”).  
+2. **Circuit breaker** — Auto-pause on drawdown / daily loss (matches ERC-8004 ranking).  
+3. **Reputation-weighted allocation** (advanced) — More capital to agents with better validated history.  
+4. **Multi-agent competition** (stretch) — Same infra, different `AGENT_ID` / registry entries.
+
+---
+
+## 11. Demo flow (about two minutes)
+
+1. Show **on-chain agent identity** (registry ID / link).  
+2. Show **live or recent decision** with reasoning + confidence.  
+3. Show **signed intent** and **risk / sandbox check** passed or blocked.  
+4. Show **Kraken-side execution** (CLI or UI proof) consistent with intent.  
+5. Show **dashboard** — PnL, drawdown, validation trail.
+
+If live APIs fail, fall back to **canned last run** with honest labeling.
+
+---
+
+## 12. Repository layout
 
 ```
-trading-agent/          # Hexagonal trading agent binary
-  src/
-    main.rs             # Composition root: wiring, HTTP server, main loop
-    domain/             # Pure logic: strategy, risk, model, intent
-    ports/              # Traits: Decision, Market, Execution, etc.
-    application/        # TradingAgent orchestration, intent_builder
-    adapters/           # Kraken, HTTP logs, momentum, ADK, Claude, hybrid, signer, validation
-trading-dashboard/      # SvelteKit app polling /logs
-adk-rust/               # Local ADK Rust crate (agent features)
-claude-code-best-practice/  # Optional reference material for tooling workflows
+trading-agent/          # Hexagonal agent
+  src/main.rs           # Wiring, HTTP logs server, tick loop
+  src/domain/           # strategy, risk, model, intent
+  src/ports/            # traits
+  src/application/      # TradingAgent, intent_builder
+  src/adapters/         # Kraken, logs, decisions, signer, validation, …
+trading-dashboard/      # SvelteKit + Chart.js
+adk-rust/               # Local ADK crate
 ```
 
 ---
 
-## 6. Design patterns & architecture
-
-### 6.1 Hexagonal architecture (ports & adapters)
-
-- **Ports** (`src/ports/`): `DecisionPort`, `MarketPort`, `ExecutionPort`, `ValidationPort`, `SignerPort`, `PerformancePort`—framework-free interfaces.
-- **Adapters** (`src/adapters/`): Kraken, HTTP logging, concrete decision engines, etc.
-- **Application** (`TradingAgent`): Single `run_once` pipeline—fetch → decide → risk → intent → sign → execute → update position → validate/log.
-
-**Why it wins in a hackathon:** judges can see **clean boundaries**; you can swap Kraken for mock data or swap LLM for rules in minutes.
-
-### 6.2 Strategy / driver pattern for decisions
-
-`DecisionDriver` enum in `main` selects implementation without changing `TradingAgent` generics usage at the type level beyond the chosen concrete `D`.
-
-Modes (env `AGENT_DECISION`): `momentum` (default), `claude`, `adk`, `hybrid`.
-
-### 6.3 Domain-driven risk policy
-
-`domain/risk.rs` centralizes **policy** (drawdown, confidence floor, position constraints) separate from **signal generation**—clear story for “safe agent” narrative.
-
-### 6.4 Application service
-
-`TradingAgent::run_once` is the **transaction script** for one tick: orchestration only, no exchange details.
-
-### 6.5 Observability adapter
-
-`http_logs` decouples **persistence/streaming of decisions** from core logic; dashboard depends only on the log schema.
-
-### 6.6 Frontend: Svelte 5 runes
-
-`$state` for logs and canvas refs; `onMount` / `onDestroy` for polling and Chart.js lifecycle—aligns with strict TS + modern Svelte.
-
----
-
-## 7. Implementation approach (how to extend without thrash)
-
-1. **Preserve the pipeline:** New features should plug in as new adapters or domain functions, not scattered `if demo` branches in `run_once`.
-2. **Version the log JSON:** If you add fields, keep backward compatibility or bump a `schema_version` in each row for the dashboard.
-3. **Env as feature flags:** `AGENT_DECISION`, risk thresholds, intervals—document in README for judges.
-4. **Demo path:** Run agent + dashboard on known ports; use recorded logs as fallback if venue API is flaky.
-5. **Pitch alignment:** Lead with **risk gates + audit trail**, then **multi-brain** (rules vs LLM), then **live charts**.
-
----
-
-## 8. Key environment variables (agent)
+## 13. Key environment variables (`trading-agent`)
 
 | Variable | Purpose |
 |----------|---------|
-| `AGENT_PAIR` | Trading pair (default `BTCUSD`) |
-| `AGENT_VOLUME` / intent sizing | Order size string |
-| `AGENT_ID` | Agent identity in intents |
-| `AGENT_SIGNING_KEY` | Demo signing secret |
-| `AGENT_INITIAL_BALANCE` | Performance tracker starting equity |
-| `AGENT_HTTP_PORT` | Log server port (default `3030`) |
+| `AGENT_PAIR` | Pair (e.g. `BTCUSD`) |
+| `AGENT_VOLUME` | Size string |
+| `AGENT_ID` | Agent id in intents (align with on-chain id later) |
+| `AGENT_SIGNING_KEY` | Signing secret (replace with wallet/session keys per EIP-8004 plan) |
+| `AGENT_INITIAL_BALANCE` | Performance tracker seed |
+| `AGENT_HTTP_PORT` | Log server (default `3030`) |
 | `AGENT_DECISION` | `momentum` \| `claude` \| `adk` \| `hybrid` |
-| `AGENT_INTERVAL_SECS` | Tick period |
-| `AGENT_OHLC_INTERVAL`, `AGENT_MOMENTUM_LOOKBACK` | Market history shaping |
-| `AGENT_STRATEGY_*`, `AGENT_RISK_*`, `AGENT_MAX_DRAWDOWN` | Strategy and risk tuning |
+| `AGENT_INTERVAL_SECS` | Tick interval |
+| `AGENT_OHLC_INTERVAL`, `AGENT_MOMENTUM_LOOKBACK` | History |
+| `AGENT_STRATEGY_*`, `AGENT_RISK_*`, `AGENT_MAX_DRAWDOWN` | Strategy + risk |
 
 ---
 
-## 9. Code reference map (anchor files)
+## 14. Code reference map
 
-| Concern | Location |
-|---------|----------|
-| Composition root & loop | `trading-agent/src/main.rs` |
-| Tick orchestration | `trading-agent/src/application/agent.rs` |
-| Rule-based strategy | `trading-agent/src/domain/strategy.rs` |
-| Risk policy | `trading-agent/src/domain/risk.rs` |
-| Intent construction | `trading-agent/src/application/intent_builder.rs` |
-| Dashboard + charts | `trading-dashboard/src/routes/+page.svelte` |
+| Concern | Path |
+|---------|------|
+| Composition & loop | `trading-agent/src/main.rs` |
+| Orchestration | `trading-agent/src/application/agent.rs` |
+| Rule strategy | `trading-agent/src/domain/strategy.rs` |
+| Risk | `trading-agent/src/domain/risk.rs` |
+| Intent | `trading-agent/src/application/intent_builder.rs` |
+| Dashboard | `trading-dashboard/src/routes/+page.svelte` |
 
 ---
 
-## 10. Prompts for tooling (copy-paste)
+## 15. Prompts for tooling (copy-paste)
 
-Use these as **system or first messages** depending on the product’s UI. Replace `{JUDGING_CRITERIA}` with the hackathon’s published rubric when available.
-
-### 10.1 Claude Code (implementation pair-programmer)
+### 15.1 Claude Code
 
 ```text
-You are working in a Rust + SvelteKit monorepo for a hackathon trading agent.
+You are working in hack01: Rust hexagonal trading-agent + SvelteKit trading-dashboard + adk-rust.
+
+Hackathon: Combined Kraken CLI execution + EIP-8004 (ERC-8004) identity, reputation, validation registries and capital sandbox / risk router per official brief.
+
+Mission: Trustless AI trading agents — safe capital, executed strategies, transparent behavior. AI proposes; risk layer and chain policy gate; Kraken executes only after approval.
 
 Constraints:
-- Rust: edition 2021, Tokio, anyhow in the binary, hexagonal layout: domain/, ports/, application/, adapters/.
-- Do not break the TradingAgent::run_once pipeline: market → decision → risk → intent → sign → execute → log.
-- New behavior: prefer new adapter modules or domain functions; keep ports as traits.
-- Frontend: Svelte 5 runes ($state), TypeScript strict, pnpm only.
-- After edits, run cargo check in trading-agent and pnpm check in trading-dashboard when relevant.
+- Preserve TradingAgent::run_once: market → decision → risk → intent → sign → execute → log.
+- Prefer new adapters (execution, chain, registry client) over branching inside run_once.
+- Rust 2021, Tokio, anyhow in binary; pnpm only for frontend; Svelte 5 runes, TS strict.
+- When adding Kraken CLI: subprocess or official SDK per repo choice; never skip risk checks.
+- When adding EIP-8004: follow eips.ethereum.org/EIPS/eip-8004 and hackathon’s contract addresses / ABIs.
 
-Task: {DESCRIBE_FEATURE_OR_BUG}
+Task: {DESCRIBE_FEATURE}
 
-Files to respect: trading-agent/src/main.rs, application/agent.rs, domain/*, ports/*, adapters/*, trading-dashboard/src/routes/+page.svelte.
-
-Deliver: minimal diff, list env vars if added, and a one-paragraph judge-facing explanation of the change.
+Deliver: minimal diff, new env vars, how demo proves Kraken + ERC-8004 judges’ criteria.
 ```
 
-### 10.2 Perplexity (research, links, competitive landscape)
+### 15.2 Perplexity (research)
 
 ```text
-Research for a hackathon project: autonomous crypto trading agent with Kraken integration, paper trading, risk gates (drawdown, confidence, position limits), audit logs, and optional LLM/ADK decision layer. Stack: Rust hexagonal architecture, SvelteKit dashboard.
+Research with authoritative links:
 
-Please find and summarize:
-1. Kraken REST/WebSocket best practices for OHLC and rate limits (official docs preferred).
-2. Recent hackathon winners or fintech demos where "explainable AI" or audit trails were differentiators.
-3. Legal/compliance talking points for demo-only / paper trading (no investment advice).
-4. Any open-source Rust trading or exchange client patterns we should align with.
+1. EIP-8004: Identity, Reputation, Validation registries — interfaces, events, and reference contracts (github.com/erc-8004/erc-8004-contracts).
+2. Kraken CLI: install, auth, market data, place order — official Kraken / Kraken API docs only.
+3. “AI trading agents ERC-8004” LabLab or CompeteHub hackathon: sandbox vault, risk router, ranking metrics (risk-adjusted, drawdown, validation quality).
+4. Patterns for linking signed off-chain intents to on-chain validation (EIP-712, registries, or hackathon-specific).
+5. Legal/disclaimer language for hackathon demos (not investment advice).
 
-Output: bullet summary + full URLs for each source. Flag contradictions between sources.
+Output: bullets + full URLs; note testnet vs mainnet and any rule contradictions.
 ```
 
-### 10.3 Google Gemini (synthesis, rubric alignment, deck outline)
+### 15.3 Google Gemini (rubric, deck, Q&A)
 
 ```text
-Context: Our project is a Rust hexagonal "trading agent" with pluggable decisions (rules, Claude, Google ADK hybrid), Kraken market + paper execution, risk layer, signed intents, HTTP JSON logs, and a SvelteKit + Chart.js dashboard.
-
-Hackathon goal: maximize judging impact in {TIME_LIMIT} minutes.
+Project: Combined Kraken + EIP-8004 trading agent. Rust core with risk gates, signed intents, logs, Svelte dashboard. Target: win both execution (PnL) and trust (risk-adjusted + validation) narratives.
 
 Tasks:
-1. Given rubric items: {PASTE_RUBRIC}, map each item to a specific demo beat (what we show on screen, what we say in 15 seconds).
-2. Propose a 5-slide storyline: problem → architecture → safety → live demo → roadmap.
-3. List 5 sharp Q&A answers judges might ask (overfitting, live money, API keys, model cost, failure modes).
-4. Suggest one optional visual (diagram description) we could add to the repo README or deck.
+1. Map each official judging criterion to a 20-second demo beat and on-screen artifact.
+2. 5-slide story: problem (trust triangle) → hybrid architecture → safety (sandbox + risk) → live demo → metrics.
+3. Q&A: fake trades vs real CLI, partial trustlessness with CEX, model failure modes, registry costs/latency, reproducibility.
+4. One architecture diagram description (identity → intent → validation → Kraken → reputation loop).
 
-Be concrete; refer to components: TradingAgent run_once, risk apply_risk, GET /logs, dashboard charts.
+Constraints: Acknowledge current repo uses paper execution until adapter is swapped; combined submission must show path to real Kraken + on-chain validation.
 ```
 
-### 10.4 Cross-tool “single context block” (paste into any tool)
+### 15.4 Single context block (any tool)
 
 ```text
-Project: hack01 — trading-agent (Rust) + trading-dashboard (SvelteKit 5).
-Architecture: Hexagonal — ports in src/ports, adapters in src/adapters, orchestration in application/agent.rs, pure logic in domain/.
-Decision modes (env AGENT_DECISION): momentum | claude | adk | hybrid.
-Risk: drawdown cap, min confidence for trades, single long position semantics.
-Observability: Axum GET /logs consumed by dashboard; Chart.js for PnL/drawdown.
-Hackathon angle: explainable agentic trading with safety rails and swappable brains, Kraken-oriented, paper execution for demo safety.
+hack01: Rust hexagonal trading-agent, SvelteKit dashboard, GET /logs, Chart.js.
+run_once: market → decide → apply_risk → build_intent → sign → execute → log.
+AGENT_DECISION: momentum|claude|adk|hybrid. Risk: drawdown, confidence, position rules.
+Hackathon: Kraken challenge (CLI, AI, build in public, PnL) + ERC-8004 challenge (identity registry, reputation, validation artifacts, sandbox vault/risk router, risk-adjusted ranking). Combined = EIP-8004 trust + Kraken execution + proof-of-decision trail.
+Spec: eips.ethereum.org/EIPS/eip-8004
 ```
 
 ---
 
-## 11. Winning playbook (concise)
+## 16. Winning playbook (short)
 
-1. **Demo reliability:** Prefer paper + logged scenario; preflight dashboard against a static JSON if network fails.
-2. **Narrative:** “Safety first, intelligence optional”—risk module before any “AI trader” claim.
-3. **Architecture slide:** One diagram—ports/adapters + `run_once` sequence.
-4. **Honesty:** State limits (simulation, not financial advice, model latency/cost).
-5. **Rubric fit:** Explicitly tick each judging criterion in the final 60 seconds.
+1. **Do not fake execution** if rules require real Kraken trades; use paper only when allowed and label it.  
+2. **Optimize ERC-8004 track** for drawdown and validation clarity, not only raw return.  
+3. **One diagram** in deck: hybrid stack + bridge.  
+4. **Treat AI as untrusted**; lead demo with **risk blocked** case, then **approved** case.  
+5. **Build in public** on schedule required by Kraken track.
 
 ---
 
-## 12. Document control
+## 17. Document control
 
 | Version | Date | Notes |
 |---------|------|--------|
-| 1.0 | 2026-03-31 | Generated from current `hack01` tree; align rubric and sponsor names when announced |
+| 1.0 | 2026-03-31 | Initial tree-based report |
+| 2.0 | 2026-03-31 | Source of truth: mission, two-track hackathon, EIP-8004 + Kraken synergy, gaps, phased plan, prompts |
 
 ---
 
-*This report is a living artifact: update Section 2 and Section 10 when official hackathon rules, sponsors, or judging criteria are published.*
+*Update this file when organizers publish final addresses, rubrics, or CLI/sandbox API versions.*
