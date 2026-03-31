@@ -63,6 +63,9 @@ impl ValidationPort for ArtifactValidation {
             reasoning: decision.reasoning.clone(),
             pnl: performance.pnl,
             drawdown: performance.drawdown,
+            balance: performance.balance,
+            peak_balance: performance.peak_balance,
+            blocked_by_risk: blocked,
         };
 
         {

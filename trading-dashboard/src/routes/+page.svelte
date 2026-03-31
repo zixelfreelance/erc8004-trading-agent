@@ -20,40 +20,89 @@
     reasoning: string;
     pnl: number;
     drawdown: number;
+    balance: number;
+    peak_balance: number;
+    blocked_by_risk: boolean;
   };
+
+  const agentOrigin = (import.meta.env.VITE_AGENT_ORIGIN as string | undefined)?.replace(
+    /\/$/,
+    "",
+  );
+  const logsUrl = agentOrigin ? `${agentOrigin}/logs` : "/logs";
 
   let logs = $state<LogRow[]>([]);
   let fetchError = $state<string | null>(null);
+  let connected = $state(false);
+  let lastPoll = $state<Date | null>(null);
+
   let pnlCanvas = $state<HTMLCanvasElement | null>(null);
   let ddCanvas = $state<HTMLCanvasElement | null>(null);
+  let priceCanvas = $state<HTMLCanvasElement | null>(null);
   let pnlChart: Chart | null = null;
   let ddChart: Chart | null = null;
+  let priceChart: Chart | null = null;
   let poll: ReturnType<typeof setInterval> | undefined;
 
   const accent = "#5eead4";
   const warn = "#fbbf24";
+  const priceLine = "#a5b4fc";
   const grid = "rgba(148, 163, 184, 0.15)";
+
+  function normalizeLogs(raw: unknown): LogRow[] {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((r) => {
+      const o = r as Record<string, unknown>;
+      return {
+        timestamp: String(o.timestamp ?? ""),
+        action: String(o.action ?? "Hold"),
+        price: Number(o.price ?? 0),
+        confidence: Number(o.confidence ?? 0),
+        reasoning: String(o.reasoning ?? ""),
+        pnl: Number(o.pnl ?? 0),
+        drawdown: Number(o.drawdown ?? 0),
+        balance: Number(o.balance ?? 0),
+        peak_balance: Number(o.peak_balance ?? 0),
+        blocked_by_risk: Boolean(o.blocked_by_risk),
+      };
+    });
+  }
 
   function destroyCharts() {
     pnlChart?.destroy();
     ddChart?.destroy();
+    priceChart?.destroy();
     pnlChart = null;
     ddChart = null;
+    priceChart = null;
   }
 
   function rebuildCharts(rows: LogRow[]) {
     destroyCharts();
-    if (!pnlCanvas || !ddCanvas || rows.length === 0) return;
+    if (!pnlCanvas || !ddCanvas || !priceCanvas || rows.length === 0) return;
 
     const labels = rows.map((r) => {
       const d = new Date(r.timestamp);
       return Number.isNaN(d.getTime())
         ? r.timestamp.slice(11, 19)
-        : d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        : d.toLocaleTimeString(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
     });
 
     Chart.defaults.color = "#94a3b8";
     Chart.defaults.borderColor = grid;
+
+    const commonOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 8 } },
+      },
+    };
 
     pnlChart = new Chart(pnlCanvas, {
       type: "line",
@@ -73,11 +122,9 @@
         ],
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        ...commonOptions,
         scales: {
-          x: { ticks: { maxTicksLimit: 8 } },
+          ...commonOptions.scales,
           y: { ticks: { callback: (v) => `${v}` } },
         },
       },
@@ -101,11 +148,9 @@
         ],
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        ...commonOptions,
         scales: {
-          x: { ticks: { maxTicksLimit: 8 } },
+          ...commonOptions.scales,
           y: {
             ticks: {
               callback: (v) => `${Number(v).toFixed(2)}%`,
@@ -114,17 +159,45 @@
         },
       },
     });
+
+    priceChart = new Chart(priceCanvas, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Price",
+            data: rows.map((r) => r.price),
+            borderColor: priceLine,
+            backgroundColor: "rgba(165, 180, 252, 0.1)",
+            fill: true,
+            tension: 0.2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          y: { ticks: { callback: (v) => Number(v).toLocaleString() } },
+        },
+      },
+    });
   }
 
   async function loadLogs() {
     try {
-      const res = await fetch("/logs");
+      const res = await fetch(logsUrl);
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      logs = await res.json();
+      logs = normalizeLogs(await res.json());
       fetchError = null;
-      rebuildCharts(logs);
+      connected = true;
+      lastPoll = new Date();
     } catch (e) {
       fetchError = e instanceof Error ? e.message : "Failed to load logs";
+      connected = false;
     }
   }
 
@@ -148,20 +221,54 @@
     destroyCharts();
   });
 
+  $effect(() => {
+    if (!pnlCanvas || !ddCanvas || !priceCanvas) return;
+    rebuildCharts(logs);
+  });
+
   const last = $derived(logs.length ? logs[logs.length - 1] : null);
 </script>
 
 <svelte:head>
-  <title>Agent Dashboard</title>
+  <title>Verifiable agent · dashboard</title>
 </svelte:head>
 
 <main class="shell">
   <header class="hero">
-    <p class="eyebrow">Kraken paper · live metrics</p>
-    <h1>Agent Dashboard</h1>
+    <div class="hero-top">
+      <p class="eyebrow">Kraken paper · live audit trail</p>
+      <span class="status" class:live={connected} class:down={!connected}>
+        {connected ? "Connected" : "Offline"}
+      </span>
+    </div>
+    <h1>Trading agent dashboard</h1>
     <p class="lede">
-      PnL, drawdown, last decision, and trade log. Point the dev server proxy at your Rust agent
-      (<code>AGENT_HTTP_PORT</code>, default 3030).
+      Risk-adjusted view of PnL, drawdown, and decisions — fed by the Rust agent’s
+      <code>/logs</code> API (signed intents + artifacts in the terminal).
+    </p>
+    <div class="pipeline" aria-hidden="true">
+      <span>Market</span>
+      <span class="arrow">→</span>
+      <span>Decision</span>
+      <span class="arrow">→</span>
+      <span>Risk</span>
+      <span class="arrow">→</span>
+      <span>Intent</span>
+      <span class="arrow">→</span>
+      <span>Execute</span>
+      <span class="arrow">→</span>
+      <span>Validate</span>
+    </div>
+    <p class="meta">
+      {#if agentOrigin}
+        API: <code>{logsUrl}</code>
+      {:else}
+        Dev proxy → <code>VITE_AGENT_URL</code> (default <code>127.0.0.1:3030</code>) · or set
+        <code>VITE_AGENT_ORIGIN</code> for direct CORS
+      {/if}
+      {#if lastPoll}
+        · updated {lastPoll.toLocaleTimeString()}
+      {/if}
     </p>
   </header>
 
@@ -182,20 +289,36 @@
         {last != null ? `${(last.drawdown * 100).toFixed(2)}%` : "—"}
       </p>
     </article>
+    <article class="card metric">
+      <h2>Paper balance</h2>
+      <p class="metric-value balance">
+        {last != null ? last.balance.toFixed(2) : "—"}
+      </p>
+      {#if last && last.peak_balance > 0}
+        <p class="sub">Peak {last.peak_balance.toFixed(2)}</p>
+      {/if}
+    </article>
   </section>
 
-  <section class="card chart-card">
-    <h2>PnL over time</h2>
-    <div class="chart-wrap">
-      <canvas bind:this={pnlCanvas} aria-label="PnL chart"></canvas>
-    </div>
-  </section>
-
-  <section class="card chart-card">
-    <h2>Drawdown</h2>
-    <div class="chart-wrap">
-      <canvas bind:this={ddCanvas} aria-label="Drawdown chart"></canvas>
-    </div>
+  <section class="grid-charts">
+    <article class="card chart-card">
+      <h2>PnL over time</h2>
+      <div class="chart-wrap">
+        <canvas bind:this={pnlCanvas} aria-label="PnL chart"></canvas>
+      </div>
+    </article>
+    <article class="card chart-card">
+      <h2>Drawdown</h2>
+      <div class="chart-wrap">
+        <canvas bind:this={ddCanvas} aria-label="Drawdown chart"></canvas>
+      </div>
+    </article>
+    <article class="card chart-card">
+      <h2>Mark price</h2>
+      <div class="chart-wrap">
+        <canvas bind:this={priceCanvas} aria-label="Price chart"></canvas>
+      </div>
+    </article>
   </section>
 
   <section class="card decision">
@@ -204,6 +327,9 @@
       <p class="decision-action">
         {last.action}
         <span class="conf">({last.confidence.toFixed(2)})</span>
+        {#if last.blocked_by_risk}
+          <span class="risk-pill">Risk override</span>
+        {/if}
       </p>
       <p class="reasoning">"{last.reasoning}"</p>
     {:else}
@@ -212,17 +338,19 @@
   </section>
 
   <section class="card table-card">
-    <h2>Trade log</h2>
+    <h2>Tick log</h2>
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
             <th>Time</th>
             <th>Action</th>
+            <th>Risk</th>
             <th>Price</th>
             <th>Conf.</th>
             <th>PnL</th>
             <th>DD</th>
+            <th>Balance</th>
           </tr>
         </thead>
         <tbody>
@@ -230,10 +358,18 @@
             <tr>
               <td class="mono">{log.timestamp}</td>
               <td><span class="pill">{log.action}</span></td>
+              <td>
+                {#if log.blocked_by_risk}
+                  <span class="pill warn">Blocked</span>
+                {:else}
+                  <span class="pill ok">OK</span>
+                {/if}
+              </td>
               <td class="mono">{log.price.toFixed(2)}</td>
               <td class="mono">{log.confidence.toFixed(2)}</td>
               <td class="mono" class:pos={log.pnl >= 0}>{log.pnl.toFixed(2)}</td>
               <td class="mono">{(log.drawdown * 100).toFixed(2)}%</td>
+              <td class="mono">{log.balance.toFixed(2)}</td>
             </tr>
           {/each}
         </tbody>
@@ -253,7 +389,7 @@
   }
 
   .shell {
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 4rem;
   }
@@ -262,13 +398,45 @@
     margin-bottom: 2rem;
   }
 
+  .hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+
   .eyebrow {
     font-family: "IBM Plex Mono", monospace;
     font-size: 0.75rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: #5eead4;
-    margin: 0 0 0.5rem;
+    margin: 0;
+  }
+
+  .status {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: #94a3b8;
+  }
+
+  .status.live {
+    border-color: rgba(94, 234, 212, 0.45);
+    color: #5eead4;
+    background: rgba(94, 234, 212, 0.08);
+  }
+
+  .status.down {
+    border-color: rgba(248, 113, 113, 0.4);
+    color: #fca5a5;
+    background: rgba(248, 113, 113, 0.08);
   }
 
   h1 {
@@ -279,16 +447,53 @@
   }
 
   .lede {
-    max-width: 52ch;
+    max-width: 58ch;
     color: #94a3b8;
     line-height: 1.55;
-    margin: 0;
+    margin: 0 0 1.25rem;
   }
 
   .lede code {
     font-family: "IBM Plex Mono", monospace;
     font-size: 0.9em;
     color: #cbd5e1;
+  }
+
+  .pipeline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+  }
+
+  .pipeline span:not(.arrow) {
+    padding: 0.2rem 0.45rem;
+    border-radius: 6px;
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    color: #cbd5e1;
+  }
+
+  .arrow {
+    color: #475569;
+    padding: 0;
+    border: none;
+    background: none;
+  }
+
+  .meta {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  .meta code {
+    color: #94a3b8;
   }
 
   .banner.error {
@@ -302,7 +507,14 @@
 
   .grid-metrics {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .grid-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1rem;
     margin-bottom: 1.25rem;
   }
@@ -341,12 +553,18 @@
     color: #fbbf24;
   }
 
-  .chart-card {
-    margin-bottom: 1.25rem;
+  .metric-value.balance {
+    color: #a5b4fc;
   }
 
-  .chart-wrap {
-    height: 220px;
+  .sub {
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  .chart-card .chart-wrap {
+    height: 200px;
     position: relative;
   }
 
@@ -354,12 +572,27 @@
     font-size: 1.35rem;
     font-weight: 600;
     margin: 0 0 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .conf {
     color: #94a3b8;
     font-weight: 500;
     font-size: 1rem;
+  }
+
+  .risk-pill {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.35);
   }
 
   .reasoning {
@@ -420,5 +653,15 @@
     color: #99f6e4;
     font-size: 0.8rem;
     font-weight: 600;
+  }
+
+  .pill.ok {
+    background: rgba(94, 234, 212, 0.1);
+    color: #5eead4;
+  }
+
+  .pill.warn {
+    background: rgba(251, 191, 36, 0.12);
+    color: #fcd34d;
   }
 </style>

@@ -9,4 +9,7 @@ pub struct TradeLogRecord {
     pub reasoning: String,
     pub pnl: f64,
     pub drawdown: f64,
+    pub balance: f64,
+    pub peak_balance: f64,
+    pub blocked_by_risk: bool,
 }
