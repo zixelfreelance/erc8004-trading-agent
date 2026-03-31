@@ -47,6 +47,7 @@ This repo is a **structured notebook** for the **LabLab “AI Trading Agents”*
 |------|------------------|
 | [`extracted/kraken-cli-announcement.md`](extracted/kraken-cli-announcement.md) | Kraken blog TL;DR: MCP, paper trading, NDJSON, install one-liner, risk lines + **local clone note**. |
 | [`extracted/lablab-ai-trading-agents-rules-research.md`](extracted/lablab-ai-trading-agents-rules-research.md) | **Judging, submission, tracks, vault, Surge eligibility, prizes — published vs TBA** (no secrets). |
+| [`extracted/lablab-ai-trading-agents-essentials.md`](extracted/lablab-ai-trading-agents-essentials.md) | **One-page core requirement, loop, checklist, what wins** (planning brief). |
 
 **Local clone (ignored):** `kraken-cli/` — `gh repo clone krakenfx/kraken-cli`; update with `git -C kraken-cli pull`.
 
@@ -61,6 +62,7 @@ This repo is a **structured notebook** for the **LabLab “AI Trading Agents”*
 | [`extracted/eip-8004-trustless-agents-snapshot.md`](extracted/eip-8004-trustless-agents-snapshot.md) | **Official EIP digest:** identifiers, registration JSON, identity/reputation/validation APIs, rationale, security — **diff vs live EIP** before ship. |
 | [`extracted/lablab-ai-trading-agents-technology-access.md`](extracted/lablab-ai-trading-agents-technology-access.md) | Hackathon-style requirements: Risk Router, vault, EIP-712/1271/155, leaderboard metrics. |
 | [`extracted/lablab-ai-trading-agents-rules-research.md`](extracted/lablab-ai-trading-agents-rules-research.md) | Rules/eligibility deep-dive: Kraken vs ERC-8004 criteria, submission TBA, Surge registration, prize caveats. |
+| [`extracted/lablab-ai-trading-agents-essentials.md`](extracted/lablab-ai-trading-agents-essentials.md) | Stripped essentials: what the hackathon needs, loop, submission, differentiation. |
 | [`extracted/medium-savvysid-erc-8004-trustless-agent-layer.md`](extracted/medium-savvysid-erc-8004-trustless-agent-layer.md) | Tutorial article: three registries, Solidity/JS sketches, ROFL/TEE workflow **caveats**. |
 | [`extracted/ethereum-magicians-erc-8004-25098.md`](extracted/ethereum-magicians-erc-8004-25098.md) | Forum debate: on-chain composability, payments vs scope, Agent Card URL/domain, singleton registry intent. |
 
@@ -149,6 +151,7 @@ All paths relative to repo root `hack01/`.
 | `docs/extracted/kraken-cli-announcement.md` | Kraken CLI blog extraction + local clone note. |
 | `docs/extracted/lablab-ai-trading-agents-technology-access.md` | LabLab Technology & Access (dual challenge) extraction. |
 | `docs/extracted/lablab-ai-trading-agents-rules-research.md` | LabLab AI Trading Agents — rules research (published vs TBA). |
+| `docs/extracted/lablab-ai-trading-agents-essentials.md` | LabLab AI Trading Agents — no-fluff essentials brief. |
 | `docs/extracted/medium-savvysid-erc-8004-trustless-agent-layer.md` | Medium ERC-8004 tutorial extraction. |
 | `docs/extracted/ethereum-magicians-erc-8004-25098.md` | Ethereum Magicians thread extraction. |
 | `docs/extracted/eip-8004-trustless-agents-snapshot.md` | **EIP-8004 structured snapshot** (draft digest). |
@@ -179,6 +182,7 @@ hack01/
 │       ├── kraken-cli-announcement.md
 │       ├── lablab-ai-trading-agents-technology-access.md
 │       ├── lablab-ai-trading-agents-rules-research.md
+│       ├── lablab-ai-trading-agents-essentials.md
 │       ├── medium-savvysid-erc-8004-trustless-agent-layer.md
 │       ├── ethereum-magicians-erc-8004-25098.md
 │       ├── eip-8004-trustless-agents-snapshot.md

@@ -2,7 +2,7 @@
 
 **Event (typical public framing):** online hackathon, **Mar 30 – Apr 12, 2026**, ~**$55,000** pool (verify on live page).  
 **Primary URLs:** [AI Trading Agents — LabLab](https://lablab.ai/ai-hackathons/ai-trading-agents) · [Hackathon guidelines — LabLab](https://lablab.ai/blog/hackathon-guidelines)  
-**Companion in this repo:** [`lablab-ai-trading-agents-technology-access.md`](lablab-ai-trading-agents-technology-access.md) (technology requirements).  
+**Companion in this repo:** [`lablab-ai-trading-agents-technology-access.md`](lablab-ai-trading-agents-technology-access.md) (technology requirements) · [`lablab-ai-trading-agents-essentials.md`](lablab-ai-trading-agents-essentials.md) (no-fluff brief).  
 **Assembled:** 2026-03-31 from organizer-facing copy + community research notes.
 
 ## 0. Hackathon timeline (captured detail)
