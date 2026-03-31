@@ -45,6 +45,10 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/krakenfx/kraken-cli/rel
 
 Materials are general information only; not investment advice; not a recommendation to buy/sell/stake/hold; crypto can be unregulated; loss of funds possible; tax may apply — seek independent advice.
 
+## Local workspace clone
+
+This repo keeps a sibling checkout at **`kraken-cli/`** (from `gh repo clone krakenfx/kraken-cli`). It is **gitignored** here so `hack01` does not embed upstream’s history. Update the tool with `git -C kraken-cli pull` from the workspace root.
+
 ---
 
 *This file is a project reference extraction, not legal or investment advice.*

@@ -1,0 +1,3 @@
+# Full upstream clone (separate git history). Re-create:
+#   gh repo clone krakenfx/kraken-cli
+kraken-cli/
