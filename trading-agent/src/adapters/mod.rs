@@ -1,4 +1,5 @@
 pub mod adk_decision;
+mod adk_signal_tools;
 pub mod claude_decision;
 pub mod decision_driver;
 pub mod http_logs;

@@ -6,7 +6,9 @@ use adk_rust::prelude::*;
 use adk_rust::session::{CreateRequest, SessionService};
 use adk_rust::{SessionId, UserId};
 use async_trait::async_trait;
+use tokio::sync::RwLock;
 
+use super::adk_signal_tools::signal_tools;
 use crate::domain::model::{Decision, MarketData};
 use crate::ports::decision::DecisionPort;
 
@@ -29,11 +31,13 @@ fn parse_decision_json(raw: &str) -> anyhow::Result<Decision> {
     serde_json::from_str(slice).map_err(|e| anyhow::anyhow!("decision JSON: {e}"))
 }
 
-/// ADK-backed decision port: Claude via Anthropic, structured JSON decisions.
+/// ADK-backed decision port: Claude via Anthropic, tool-grounded signals, structured JSON.
 pub struct AdkDecision {
     agent: Arc<dyn Agent>,
     sessions: Arc<dyn SessionService>,
     session_id: SessionId,
+    /// Current tick’s market snapshot for tool handlers (`compute_price_action_signals`).
+    tick: Arc<RwLock<Option<MarketData>>>,
 }
 
 impl AdkDecision {
@@ -52,6 +56,13 @@ impl AdkDecision {
         );
 
         let instruction = r#"You are the decision head of a paper-trading agent (Kraken demo / backtest-style loop).
+
+Tools (use before your final answer):
+- compute_price_action_signals — OHLC momentum, log-return vol, z vs mean, trend label.
+- risk_limits_snapshot — min confidence and max drawdown policy the runtime enforces after you answer.
+- external_sentiment_stub — explicit "no feed" so you do not invent news.
+
+Call compute_price_action_signals and risk_limits_snapshot at least once each turn. You may call external_sentiment_stub once for grounding.
 
 Objectives (in order):
 1) Preserve capital and keep drawdown small.
@@ -79,13 +90,15 @@ action must be exactly one of: "Buy", "Sell", "Hold".
 confidence is a number between 0 and 1.
 reasoning is one or two short sentences maximum."#;
 
-        let agent = Arc::new(
-            LlmAgentBuilder::new("trader")
-                .instruction(instruction)
-                .model(model)
-                .build()
-                .map_err(|e| anyhow::anyhow!("{e:#}"))?,
-        );
+        let tick: Arc<RwLock<Option<MarketData>>> = Arc::new(RwLock::new(None));
+        let tools = signal_tools(Arc::clone(&tick));
+        let mut builder = LlmAgentBuilder::new("trader")
+            .instruction(instruction)
+            .model(model);
+        for t in tools {
+            builder = builder.tool(t);
+        }
+        let agent = Arc::new(builder.build().map_err(|e| anyhow::anyhow!("{e:#}"))?);
 
         let sessions: Arc<dyn SessionService> = Arc::new(InMemorySessionService::new());
         let session_id = SessionId::generate();
@@ -104,6 +117,7 @@ reasoning is one or two short sentences maximum."#;
             agent,
             sessions,
             session_id,
+            tick,
         })
     }
 
@@ -112,47 +126,56 @@ reasoning is one or two short sentences maximum."#;
         data: &MarketData,
         extra_context: &str,
     ) -> anyhow::Result<Decision> {
+        *self.tick.write().await = Some(data.clone());
+
         let input = format!(
-            "Market pair: {}\nLast price: {}\n\n{}\n\nRespond with only the JSON object specified in your instructions.",
+            "Market pair: {}\nLast price: {}\n\n{}\n\nUse tools as required, then respond with only the JSON object specified in your instructions.",
             data.pair, data.price, extra_context
         );
 
-        let runner = Runner::new(RunnerConfig {
-            app_name: APP_NAME.into(),
-            agent: self.agent.clone(),
-            session_service: self.sessions.clone(),
-            artifact_service: None,
-            memory_service: None,
-            plugin_manager: None,
-            run_config: None,
-            compaction_config: None,
-            context_cache_config: None,
-            cache_capable: None,
-            request_context: None,
-            cancellation_token: None,
-        })
-        .map_err(|e| anyhow::anyhow!("{e:#}"))?;
-
-        let content = Content::new("user").with_text(input);
-        let stream = runner
-            .run(UserId::new("trader")?, self.session_id.clone(), content)
-            .await
+        let outcome = async {
+            let runner = Runner::new(RunnerConfig {
+                app_name: APP_NAME.into(),
+                agent: self.agent.clone(),
+                session_service: self.sessions.clone(),
+                artifact_service: None,
+                memory_service: None,
+                plugin_manager: None,
+                run_config: None,
+                compaction_config: None,
+                context_cache_config: None,
+                cache_capable: None,
+                request_context: None,
+                cancellation_token: None,
+            })
             .map_err(|e| anyhow::anyhow!("{e:#}"))?;
 
-        let mut text = String::new();
-        let mut s = stream;
-        while let Some(event) = s.next().await {
-            let event = event.map_err(|e| anyhow::anyhow!("{e:#}"))?;
-            if let Some(content) = event.content() {
-                for part in &content.parts {
-                    if let Some(t) = part.text() {
-                        text.push_str(t);
+            let content = Content::new("user").with_text(input);
+            let stream = runner
+                .run(UserId::new("trader")?, self.session_id.clone(), content)
+                .await
+                .map_err(|e| anyhow::anyhow!("{e:#}"))?;
+
+            let mut text = String::new();
+            let mut s = stream;
+            while let Some(event) = s.next().await {
+                let event = event.map_err(|e| anyhow::anyhow!("{e:#}"))?;
+                if let Some(content) = event.content() {
+                    for part in &content.parts {
+                        if let Some(t) = part.text() {
+                            text.push_str(t);
+                        }
                     }
                 }
             }
-        }
 
-        parse_decision_json(&text)
+            parse_decision_json(&text)
+        }
+        .await;
+
+        *self.tick.write().await = None;
+
+        outcome
     }
 }
 
