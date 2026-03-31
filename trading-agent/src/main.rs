@@ -81,22 +81,18 @@ async fn main() -> anyhow::Result<()> {
             .unwrap_or(0.05),
     };
 
-    let strategy_display_name = std::env::var("AGENT_STRATEGY_LABEL").unwrap_or_else(|_| {
-        match decision_mode.as_str() {
+    let strategy_display_name =
+        std::env::var("AGENT_STRATEGY_LABEL").unwrap_or_else(|_| match decision_mode.as_str() {
             "claude" | "adk" => "LLM-assisted decision (risk gates + signed intents)".to_string(),
             "hybrid" => "Hybrid: rule-based signal + ADK final decision".to_string(),
             _ => STRATEGY_DISPLAY_NAME.to_string(),
-        }
-    });
+        });
 
     let decision: DecisionDriver = match decision_mode.as_str() {
         "claude" => DecisionDriver::Claude(adapters::claude_decision::ClaudeDecision),
-        "adk" => DecisionDriver::Adk(Arc::new(
-            adapters::adk_decision::AdkDecision::new().await?,
-        )),
+        "adk" => DecisionDriver::Adk(Arc::new(adapters::adk_decision::AdkDecision::new().await?)),
         "hybrid" => DecisionDriver::Hybrid(Arc::new(
-            adapters::hybrid_decision::HybridAdkDecision::new(strategy_cfg_hybrid.clone())
-                .await?,
+            adapters::hybrid_decision::HybridAdkDecision::new(strategy_cfg_hybrid.clone()).await?,
         )),
         _ => DecisionDriver::Momentum(MomentumVolatilityDecision::new(momentum_cfg)),
     };

@@ -1,8 +1,8 @@
 pub mod adk_decision;
 pub mod claude_decision;
 pub mod decision_driver;
-pub mod hybrid_decision;
 pub mod http_logs;
+pub mod hybrid_decision;
 pub mod kraken_execution;
 pub mod kraken_market;
 pub mod momentum_decision;
