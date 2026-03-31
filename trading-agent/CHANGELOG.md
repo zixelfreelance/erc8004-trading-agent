@@ -7,6 +7,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 ### Added
+- **Wired into main loop:** regime detection, fee filter, ATR trailing stops
+- Regime detector feeds ADX + Bollinger bandwidth each tick, blocks trades during transition
+- Fee filter rejects trades with edge < min_edge_pct (default 0.7%)
+- ATR trailing stop: set at entry - 1.5x ATR on buy, trails upward, forces sell on breach
+- `AGENT_ATR_STOP_MULTIPLIER` env var (default 1.5)
 - Live execution mode (`AGENT_EXECUTION_MODE=live`) — real Kraken trades via `kraken buy/sell`
 - Agent metrics: atomic counters for ticks, executed, blocked, holds, errors
 - `GET /metrics` HTTP endpoint exposing real-time counters

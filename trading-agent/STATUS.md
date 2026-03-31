@@ -42,10 +42,11 @@
 - [x] `Deploy.s.sol` — deploys all 3 contracts
 - [x] Agent Card JSON per ERC-8004 spec
 - [x] `deploy.sh` helper script
-
-### In Progress
-
-- [ ] Wire indicators into ADK signal tools (agent-signals running)
+- [x] ADK signal tools expanded: `compute_technical_indicators` (RSI/MACD/BB/ATR/ADX/spread/vwap/vol)
+- [x] **Wired into main loop:** regime detection (ADX + BB bandwidth → stateful detector)
+- [x] **Wired into main loop:** fee filter (edge < 0.7% → hold)
+- [x] **Wired into main loop:** regime filter (transition → hold)
+- [x] **Wired into main loop:** ATR trailing stop (set on buy, trail on hold, force sell on breach)
 
 ### Blocked — Needs Human Action
 

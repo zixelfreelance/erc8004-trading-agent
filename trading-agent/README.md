@@ -71,8 +71,14 @@ curl http://localhost:3030/logs
 | `AGENT_INTERVAL_SECS` | `10` | Loop interval |
 | `AGENT_MAX_DRAWDOWN` | `0.05` | Max drawdown before auto-hold |
 | `AGENT_RISK_MIN_CONFIDENCE` | `0.6` | Min confidence to trade |
+| `AGENT_MIN_EDGE_PCT` | `0.7` | Min price edge % to justify trade (fee filter) |
+| `AGENT_ATR_STOP_MULTIPLIER` | `1.5` | ATR trailing stop distance (1.5 = entry - 1.5*ATR) |
+| `AGENT_MAX_CONSECUTIVE_LOSSES` | `3` | Circuit breaker: pause after N losses |
+| `AGENT_DAILY_LOSS_LIMIT` | `5.0` | Circuit breaker: max daily loss in USD |
 | `AGENT_HTTP_PORT` | `3030` | Dashboard API port |
 | `ANTHROPIC_API_KEY` | — | Required for `adk` / `hybrid` modes |
+| `AGENT_SIGNING_KEY` | `dev-local-key` | Hex private key → EIP-712, else SHA-256 |
+| `CHAIN_ID` | `11155111` | Chain ID for EIP-712 domain (Sepolia) |
 
 ## HTTP API
 
@@ -85,22 +91,35 @@ curl http://localhost:3030/logs
 ## Strategies
 
 - **Momentum + Volatility Guard** — deterministic signal based on price momentum with volatility band filtering
-- **ADK/Claude** — LLM-powered decisions via Anthropic ADK-Rust
+- **ADK/Claude** — LLM-powered decisions via Anthropic ADK-Rust with 4 tool-augmented signals (price action, technical indicators, risk limits, sentiment)
 - **Hybrid** — momentum signal as "strong prior" refined by Claude (recommended)
+
+### Technical Indicators (live in main loop)
+
+RSI(14), MACD(12,26,9), Bollinger Bands(20,2), ATR(14), ADX(14) — all computed from 50-candle OHLC history and fed to Claude via ADK tools.
+
+### Regime Detection
+
+Stateful detector with hysteresis classifies market as **Trending** (ADX > 22), **Ranging** (low ADX + narrow Bollinger bandwidth), or **Transition** (hold — wait for clarity). Prevents whipsaw by requiring 3 consecutive confirming bars before switching state.
 
 ## Risk Controls
 
-- Max drawdown cap (default 5%)
-- Single position limit (no stacking)
-- Confidence floor (below 0.6 = forced hold)
-- Metrics tracking: every blocked trade is counted and exposed
+- **Max drawdown cap** (default 5%) — forced hold
+- **Single position limit** — no stacking
+- **Confidence floor** (below 0.6 = forced hold)
+- **Fee-aware filter** — rejects trades with expected edge < 0.7% (covers 0.52% round-trip fee)
+- **Regime filter** — holds during market transition (unclear regime)
+- **Circuit breaker** — auto-pause after 3 consecutive losses or $5 daily loss
+- **ATR trailing stop** — set at entry - 1.5x ATR, trails upward, force sells on breach
+- **Metrics tracking** — every blocked trade is counted and exposed via `/metrics`
 
 ## Tech Stack
 
 - **Agent:** Rust (hexagonal architecture, async tokio)
-- **AI:** Anthropic ADK-Rust (Claude Sonnet)
-- **Execution:** Kraken CLI
-- **Signing:** SHA-256 (upgrading to EIP-712 ECDSA)
+- **AI:** Anthropic ADK-Rust (Claude Sonnet) with tool-augmented decisions
+- **Execution:** Kraken CLI (paper + live modes)
+- **Signing:** EIP-712 ECDSA (secp256k1) with SHA-256 fallback
+- **On-chain:** Solidity on Sepolia — Identity Registry, Reputation Registry, Risk Router
 - **Dashboard:** SvelteKit
 - **On-chain:** Solidity on Base Sepolia (in progress)
 
