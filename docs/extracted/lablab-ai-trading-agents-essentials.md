@@ -2,7 +2,7 @@
 
 **One-sentence core:** Build an **AI agent** that **interacts with money or simulated money**, **makes decisions**, and **shows it behaves safely and transparently**.
 
-**See also:** [`lablab-ai-trading-agents-rules-research.md`](lablab-ai-trading-agents-rules-research.md) (published vs TBA) · [`lablab-ai-trading-agents-technology-access.md`](lablab-ai-trading-agents-technology-access.md) (technical requirements).
+**See also:** [`lablab-ai-trading-agents-rules-research.md`](lablab-ai-trading-agents-rules-research.md) (published vs TBA) · [`lablab-ai-trading-agents-technology-access.md`](lablab-ai-trading-agents-technology-access.md) (technical requirements) · [`lablab-ai-trading-agents-stack-mapping.md`](lablab-ai-trading-agents-stack-mapping.md) (pillars → your stack).
 
 ---
 
