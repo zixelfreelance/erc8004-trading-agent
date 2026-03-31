@@ -75,6 +75,7 @@ impl ValidationPort for ArtifactValidation {
             "timestamp": record.timestamp,
             "strategy": self.strategy_display_name,
             "agent": signed_intent.intent.agent_id,
+            "blocked_by_risk": blocked,
             "market": {
                 "pair": data.pair,
                 "price": data.price,

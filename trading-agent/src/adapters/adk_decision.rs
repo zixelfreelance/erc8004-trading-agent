@@ -9,27 +9,11 @@ use async_trait::async_trait;
 use tokio::sync::RwLock;
 
 use super::adk_signal_tools::signal_tools;
+use crate::domain::decision_json::parse_decision_json;
 use crate::domain::model::{Decision, MarketData};
 use crate::ports::decision::DecisionPort;
 
 const APP_NAME: &str = "trading-agent";
-
-fn extract_json_object(raw: &str) -> &str {
-    let s = raw.trim();
-    let Some(start) = s.find('{') else {
-        return s;
-    };
-    let tail = &s[start..];
-    let Some(end_rel) = tail.rfind('}') else {
-        return tail;
-    };
-    &tail[..=end_rel]
-}
-
-fn parse_decision_json(raw: &str) -> anyhow::Result<Decision> {
-    let slice = extract_json_object(raw);
-    serde_json::from_str(slice).map_err(|e| anyhow::anyhow!("decision JSON: {e}"))
-}
 
 /// ADK-backed decision port: Claude via Anthropic, tool-grounded signals, structured JSON.
 pub struct AdkDecision {

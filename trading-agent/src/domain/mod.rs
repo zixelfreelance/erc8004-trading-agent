@@ -1,3 +1,4 @@
+pub mod decision_json;
 pub mod intent;
 pub mod log_record;
 pub mod model;

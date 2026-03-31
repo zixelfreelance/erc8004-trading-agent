@@ -100,7 +100,7 @@ async fn main() -> anyhow::Result<()> {
             eprintln!("http server error: {e:#}");
         }
     });
-    eprintln!("GET /logs on http://{addr}/logs");
+    eprintln!("audit: GET http://{addr}/logs  GET http://{addr}/decision-schema");
 
     let mut market = KrakenMarket::new(&pair);
     market.ohlc_interval_minutes = ohlc_interval;
