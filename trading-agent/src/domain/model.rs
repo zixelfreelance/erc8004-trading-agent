@@ -14,7 +14,21 @@ pub struct MarketData {
     pub pair: String,
     pub price: f64,
     #[serde(default)]
+    pub bid: Option<f64>,
+    #[serde(default)]
+    pub ask: Option<f64>,
+    #[serde(default)]
+    pub spread: Option<f64>,
+    #[serde(default)]
+    pub vwap_24h: Option<f64>,
+    #[serde(default)]
+    pub volume_24h: Option<f64>,
+    #[serde(default)]
     pub ohlc_closes: Vec<f64>,
+    #[serde(default)]
+    pub ohlc_highs: Vec<f64>,
+    #[serde(default)]
+    pub ohlc_lows: Vec<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

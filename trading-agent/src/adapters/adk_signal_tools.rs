@@ -6,6 +6,7 @@ use schemars::JsonSchema;
 use serde::Serialize;
 use tokio::sync::RwLock;
 
+use crate::domain::indicators;
 use crate::domain::model::MarketData;
 use crate::domain::risk::RiskConfig;
 
@@ -85,6 +86,37 @@ pub fn risk_limits_payload(cfg: &RiskConfig) -> Value {
     })
 }
 
+pub fn technical_indicators_payload(data: &MarketData) -> Value {
+    let closes = &data.ohlc_closes;
+    let highs = &data.ohlc_highs;
+    let lows = &data.ohlc_lows;
+
+    json!({
+        "rsi_14": indicators::rsi(closes, 14),
+        "macd": indicators::macd(closes, 12, 26, 9).map(|m| json!({
+            "macd_line": m.macd_line,
+            "signal_line": m.signal_line,
+            "histogram": m.histogram
+        })),
+        "bollinger_20_2": indicators::bollinger(closes, 20, 2.0).map(|b| json!({
+            "upper": b.upper,
+            "middle": b.middle,
+            "lower": b.lower,
+            "bandwidth": b.bandwidth
+        })),
+        "atr_14": indicators::atr(highs, lows, closes, 14),
+        "adx_14": indicators::adx(highs, lows, closes, 14).map(|a| json!({
+            "adx": a.adx,
+            "plus_di": a.plus_di,
+            "minus_di": a.minus_di
+        })),
+        "spread": data.spread,
+        "vwap_24h": data.vwap_24h,
+        "volume_24h": data.volume_24h,
+        "data_points": closes.len(),
+    })
+}
+
 pub fn sentiment_stub_payload() -> Value {
     json!({
         "status": "unavailable",
@@ -140,5 +172,24 @@ pub fn signal_tools(
         .with_parameters_schema::<EmptyArgs>(),
     );
 
-    vec![price_action, risk_tool, sentiment]
+    let t2 = Arc::clone(&tick);
+    let technical = Arc::new(
+        FunctionTool::new(
+            "compute_technical_indicators",
+            "RSI(14), MACD(12,26,9), Bollinger(20,2), ATR(14), ADX(14), spread, VWAP, volume. Call for full technical analysis before deciding.",
+            move |_ctx, _args: Value| {
+                let t2 = Arc::clone(&t2);
+                async move {
+                    let guard = t2.read().await;
+                    let Some(data) = guard.as_ref() else {
+                        return Err(AdkError::tool("internal: no market tick snapshot"));
+                    };
+                    Ok(technical_indicators_payload(data))
+                }
+            },
+        )
+        .with_parameters_schema::<EmptyArgs>(),
+    );
+
+    vec![price_action, risk_tool, sentiment, technical]
 }
