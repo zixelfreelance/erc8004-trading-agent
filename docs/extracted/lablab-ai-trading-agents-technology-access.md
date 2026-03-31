@@ -64,4 +64,10 @@ Not required; can strengthen a submission:
 
 ---
 
+## Local workspace — curated ERC-8004 links
+
+Unofficial **awesome list** (community-maintained): clone with `gh repo clone sudeepb02/awesome-erc8004` → **`awesome-erc8004/`** at repo root. This parent repo **gitignores** that folder so its history stays separate; refresh with `git -C awesome-erc8004 pull`.
+
+---
+
 *Reference only. Requirements and links may change on the organizer’s site.*

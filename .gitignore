@@ -1,3 +1,5 @@
-# Full upstream clone (separate git history). Re-create:
+# Sibling clones (own git history). Re-create as needed:
 #   gh repo clone krakenfx/kraken-cli
+#   gh repo clone sudeepb02/awesome-erc8004
 kraken-cli/
+awesome-erc8004/
