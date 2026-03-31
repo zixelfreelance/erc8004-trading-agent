@@ -1,0 +1,38 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "Proof-of-Trust BTC Agent",
+  "description": "Rust AI trading agent for BTC/USD via Kraken CLI. Hexagonal architecture with momentum + Claude/ADK hybrid strategy, EIP-712 signed intents, on-chain risk enforcement, and full validation artifact trail. Designed for verifiable trust — AI proposes, contracts enforce.",
+  "image": "",
+  "services": [
+    {
+      "name": "trading-dashboard",
+      "endpoint": "http://localhost:3030/logs",
+      "description": "Live trade log with decision artifacts, risk gate outcomes, and performance metrics"
+    },
+    {
+      "name": "metrics",
+      "endpoint": "http://localhost:3030/metrics",
+      "description": "Real-time counters: ticks, trades executed, trades blocked, holds, errors"
+    },
+    {
+      "name": "decision-schema",
+      "endpoint": "http://localhost:3030/decision-schema",
+      "description": "JSON Schema for the Decision type (Buy/Sell/Hold with confidence and reasoning)"
+    }
+  ],
+  "active": true,
+  "registrations": [
+    {
+      "agentId": 0,
+      "agentRegistry": "eip155:11155111:0xIDENTITY_REGISTRY_ADDRESS"
+    }
+  ],
+  "supportedTrust": ["reputation", "validation"],
+  "capabilities": {
+    "strategy": "momentum + volatility guard + Claude/ADK hybrid",
+    "indicators": ["RSI", "MACD", "Bollinger", "ATR", "ADX"],
+    "riskControls": ["drawdown cap", "position limit", "confidence floor", "circuit breaker", "fee filter"],
+    "execution": "Kraken CLI (paper + live)",
+    "signing": "EIP-712 secp256k1"
+  }
+}
