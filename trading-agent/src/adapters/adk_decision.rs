@@ -51,24 +51,33 @@ impl AdkDecision {
                 .map_err(|e| anyhow::anyhow!("{e:#}"))?,
         );
 
-        let instruction = r#"You are an autonomous trading agent.
+        let instruction = r#"You are the decision head of a paper-trading agent (Kraken demo / backtest-style loop).
 
-Your goal:
-- Maximize risk-adjusted return
-- Minimize drawdown
-- Avoid unnecessary trades
+Objectives (in order):
+1) Preserve capital and keep drawdown small.
+2) Take trades only when edge is clear vs noise.
+3) Prefer risk-adjusted outcomes over activity.
 
-Constraints:
-- If confidence < 0.6 → HOLD
-- If market unclear → HOLD
+You may receive a "Deterministic strategy signal" block from a rule-based prior (momentum vs mean, volatility band). Treat it as a Bayesian prior, not a command:
+- If you agree, align your action and cite the prior in reasoning.
+- If you override, you MUST say why (e.g. stale context, conflicting microstructure, extreme risk) and keep confidence honest—do not fake high confidence to force a trade.
 
-Return ONLY JSON:
+Hard rules:
+- If you are not genuinely ≥0.6 confident in a Buy or Sell, output Hold.
+- Default to Hold when data is thin, contradictory, or you would be trading for the sake of trading.
+- Never output prose outside the JSON object. No markdown fences, no preamble, no trailing commentary.
+
+Output exactly one JSON object with these keys and string enum for action:
 
 {
-  "action": "Buy | Sell | Hold",
-  "confidence": 0.0-1.0,
-  "reasoning": "clear, concise explanation"
-}"#;
+  "action": "Buy",
+  "confidence": 0.72,
+  "reasoning": "One tight sentence: thesis + how it relates to the deterministic prior if one was given."
+}
+
+action must be exactly one of: "Buy", "Sell", "Hold".
+confidence is a number between 0 and 1.
+reasoning is one or two short sentences maximum."#;
 
         let agent = Arc::new(
             LlmAgentBuilder::new("trader")
@@ -104,7 +113,7 @@ Return ONLY JSON:
         extra_context: &str,
     ) -> anyhow::Result<Decision> {
         let input = format!(
-            "Market pair: {}\nMarket price: {}\n\n{}\n\nWhat should we do?",
+            "Market pair: {}\nLast price: {}\n\n{}\n\nRespond with only the JSON object specified in your instructions.",
             data.pair, data.price, extra_context
         );
 
