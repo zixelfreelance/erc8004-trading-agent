@@ -77,12 +77,11 @@ pub fn price_action_payload(data: &MarketData) -> Value {
     })
 }
 
-pub fn risk_limits_payload() -> Value {
-    let cfg = RiskConfig::default();
+pub fn risk_limits_payload(cfg: &RiskConfig) -> Value {
     json!({
         "min_confidence_to_trade": cfg.min_confidence_trade,
         "max_drawdown_limit_fraction": cfg.max_drawdown,
-        "note": "Orchestrator enforces drawdown, position, and confidence after your JSON output; align your stated confidence with these limits.",
+        "note": "These values match the live TradingAgent risk_config. The orchestrator still enforces drawdown, position, and confidence after your JSON output; align your stated confidence with these limits.",
     })
 }
 
@@ -94,7 +93,10 @@ pub fn sentiment_stub_payload() -> Value {
     })
 }
 
-pub fn signal_tools(tick: Arc<RwLock<Option<MarketData>>>) -> Vec<Arc<dyn Tool>> {
+pub fn signal_tools(
+    tick: Arc<RwLock<Option<MarketData>>>,
+    risk_limits: Arc<RiskConfig>,
+) -> Vec<Arc<dyn Tool>> {
     let t1 = Arc::clone(&tick);
     let price_action = Arc::new(
         FunctionTool::new(
@@ -116,11 +118,15 @@ pub fn signal_tools(tick: Arc<RwLock<Option<MarketData>>>) -> Vec<Arc<dyn Tool>>
         .with_parameters_schema::<EmptyArgs>(),
     );
 
-    let risk_limits = Arc::new(
+    let risk_arc = Arc::clone(&risk_limits);
+    let risk_tool = Arc::new(
         FunctionTool::new(
             "risk_limits_snapshot",
-            "Hard portfolio policy limits mirrored from the runtime risk layer. Call before final JSON.",
-            |_ctx, _args: Value| async move { Ok(risk_limits_payload()) },
+            "Hard portfolio policy limits from the same RiskConfig as the running agent. Call before final JSON.",
+            move |_ctx, _args: Value| {
+                let risk_arc = Arc::clone(&risk_arc);
+                async move { Ok(risk_limits_payload(&risk_arc)) }
+            },
         )
         .with_parameters_schema::<EmptyArgs>(),
     );
@@ -134,5 +140,5 @@ pub fn signal_tools(tick: Arc<RwLock<Option<MarketData>>>) -> Vec<Arc<dyn Tool>>
         .with_parameters_schema::<EmptyArgs>(),
     );
 
-    vec![price_action, risk_limits, sentiment]
+    vec![price_action, risk_tool, sentiment]
 }

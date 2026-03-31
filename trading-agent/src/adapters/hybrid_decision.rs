@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 
 use crate::domain::model::{Decision, MarketData};
+use crate::domain::risk::RiskConfig;
 use crate::domain::strategy::{compute_decision, market_snapshot_from, StrategyConfig};
 use crate::ports::decision::DecisionPort;
 
@@ -13,9 +14,9 @@ pub struct HybridAdkDecision {
 }
 
 impl HybridAdkDecision {
-    pub async fn new(strategy: StrategyConfig) -> anyhow::Result<Self> {
+    pub async fn new(strategy: StrategyConfig, risk_limits: RiskConfig) -> anyhow::Result<Self> {
         Ok(Self {
-            adk: AdkDecision::new().await?,
+            adk: AdkDecision::new(risk_limits).await?,
             strategy,
         })
     }

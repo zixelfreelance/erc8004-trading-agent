@@ -11,6 +11,7 @@ use tokio::sync::RwLock;
 use super::adk_signal_tools::signal_tools;
 use crate::domain::decision_json::parse_decision_json;
 use crate::domain::model::{Decision, MarketData};
+use crate::domain::risk::RiskConfig;
 use crate::ports::decision::DecisionPort;
 
 const APP_NAME: &str = "trading-agent";
@@ -25,7 +26,8 @@ pub struct AdkDecision {
 }
 
 impl AdkDecision {
-    pub async fn new() -> anyhow::Result<Self> {
+    /// `risk_limits` should be the same values as `TradingAgent::risk_config` so `risk_limits_snapshot` matches enforcement.
+    pub async fn new(risk_limits: RiskConfig) -> anyhow::Result<Self> {
         dotenvy::dotenv().ok();
 
         let api_key = std::env::var("ANTHROPIC_API_KEY")
@@ -75,7 +77,8 @@ confidence is a number between 0 and 1.
 reasoning is one or two short sentences maximum."#;
 
         let tick: Arc<RwLock<Option<MarketData>>> = Arc::new(RwLock::new(None));
-        let tools = signal_tools(Arc::clone(&tick));
+        let risk_arc = Arc::new(risk_limits);
+        let tools = signal_tools(Arc::clone(&tick), Arc::clone(&risk_arc));
         let mut builder = LlmAgentBuilder::new("trader")
             .instruction(instruction)
             .model(model);

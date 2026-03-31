@@ -83,9 +83,15 @@ async fn main() -> anyhow::Result<()> {
 
     let decision: DecisionDriver = match decision_mode.as_str() {
         "claude" => DecisionDriver::Claude(adapters::claude_decision::ClaudeDecision),
-        "adk" => DecisionDriver::Adk(Arc::new(adapters::adk_decision::AdkDecision::new().await?)),
+        "adk" => DecisionDriver::Adk(Arc::new(
+            adapters::adk_decision::AdkDecision::new(risk_config.clone()).await?,
+        )),
         "hybrid" => DecisionDriver::Hybrid(Arc::new(
-            adapters::hybrid_decision::HybridAdkDecision::new(strategy_cfg.clone()).await?,
+            adapters::hybrid_decision::HybridAdkDecision::new(
+                strategy_cfg.clone(),
+                risk_config.clone(),
+            )
+            .await?,
         )),
         _ => DecisionDriver::Momentum(MomentumVolatilityDecision::new(strategy_cfg)),
     };
