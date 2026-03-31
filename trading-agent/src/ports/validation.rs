@@ -1,4 +1,5 @@
 use crate::domain::model::{Decision, MarketData};
+use crate::domain::performance::Performance;
 use crate::domain::signed_intent::SignedIntent;
 
 pub trait ValidationPort: Send + Sync {
@@ -8,5 +9,6 @@ pub trait ValidationPort: Send + Sync {
         decision: &Decision,
         blocked: bool,
         signed_intent: &SignedIntent,
+        performance: &Performance,
     ) -> anyhow::Result<()>;
 }

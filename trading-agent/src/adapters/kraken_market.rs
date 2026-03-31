@@ -7,11 +7,17 @@ use crate::ports::market::MarketPort;
 
 pub struct KrakenMarket {
     pub pair: String,
+    pub ohlc_interval_minutes: u32,
+    pub ohlc_lookback: usize,
 }
 
 impl KrakenMarket {
     pub fn new(pair: impl Into<String>) -> Self {
-        Self { pair: pair.into() }
+        Self {
+            pair: pair.into(),
+            ohlc_interval_minutes: 5,
+            ohlc_lookback: 10,
+        }
     }
 
     fn parse_ticker_json(stdout: &[u8]) -> anyhow::Result<(String, f64)> {
@@ -33,6 +39,40 @@ impl KrakenMarket {
             .parse::<f64>()?;
         Ok((pair_key.clone(), last))
     }
+
+    fn close_from_ohlc_row(v: &Value) -> Option<f64> {
+        let row = v.as_array()?;
+        let c = row.get(4)?;
+        if let Some(s) = c.as_str() {
+            return s.parse().ok();
+        }
+        c.as_f64()
+    }
+
+    fn parse_ohlc_closes(stdout: &[u8], lookback: usize) -> anyhow::Result<Vec<f64>> {
+        let root: Value = serde_json::from_slice(stdout)?;
+        if let Some(err) = root.get("error").and_then(|e| e.as_str()) {
+            anyhow::bail!(
+                "kraken ohlc: {err} — {}",
+                root.get("message").and_then(|m| m.as_str()).unwrap_or("")
+            );
+        }
+        let obj = root
+            .as_object()
+            .ok_or_else(|| anyhow::anyhow!("ohlc: expected JSON object"))?;
+        let arr = obj
+            .values()
+            .find(|v| v.is_array())
+            .and_then(|v| v.as_array())
+            .ok_or_else(|| anyhow::anyhow!("ohlc: no candle array"))?;
+        let n = lookback.min(arr.len());
+        let start = arr.len().saturating_sub(n);
+        let closes: Vec<f64> = arr[start..]
+            .iter()
+            .filter_map(Self::close_from_ohlc_row)
+            .collect();
+        Ok(closes)
+    }
 }
 
 impl MarketPort for KrakenMarket {
@@ -47,6 +87,27 @@ impl MarketPort for KrakenMarket {
             );
         }
         let (pair, last) = Self::parse_ticker_json(&output.stdout)?;
-        Ok(MarketData { pair, last })
+
+        let ohlc_closes = match Command::new("kraken")
+            .args([
+                "ohlc",
+                &self.pair,
+                "--interval",
+                &self.ohlc_interval_minutes.to_string(),
+                "-o",
+                "json",
+            ])
+            .output()
+        {
+            Ok(out) if out.status.success() => Self::parse_ohlc_closes(&out.stdout, self.ohlc_lookback)
+                .unwrap_or_default(),
+            _ => Vec::new(),
+        };
+
+        Ok(MarketData {
+            pair,
+            price: last,
+            ohlc_closes,
+        })
     }
 }

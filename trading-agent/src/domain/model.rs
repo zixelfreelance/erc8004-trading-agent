@@ -1,20 +1,24 @@
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(dead_code)] // Buy/Sell used when decision adapter returns them
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum Action {
     Buy,
     Sell,
     Hold,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketData {
     pub pair: String,
-    pub last: f64,
+    pub price: f64,
+    #[serde(default)]
+    pub ohlc_closes: Vec<f64>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Decision {
     pub action: Action,
     pub confidence: f64,
-    pub reason: String,
+    pub reasoning: String,
 }
