@@ -95,3 +95,89 @@ fn compute_volatility(prices: &[f64]) -> f64 {
 fn normalize(value: f64) -> f64 {
     (value.abs() / 1000.0).min(1.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn cfg() -> StrategyConfig {
+        StrategyConfig::default()
+    }
+
+    #[test]
+    fn empty_prices_hold() {
+        let snap = MarketSnapshot { prices: vec![] };
+        let d = compute_decision(&snap, &cfg());
+        assert_eq!(d.action, Action::Hold);
+    }
+
+    #[test]
+    fn single_price_hold() {
+        let snap = MarketSnapshot {
+            prices: vec![100.0],
+        };
+        let d = compute_decision(&snap, &cfg());
+        // Single price: momentum = price - avg = 0, volatility = 0 < min → Hold
+        assert_eq!(d.action, Action::Hold);
+    }
+
+    #[test]
+    fn upward_momentum_buys() {
+        // Prices trending up so current >> avg, with enough volatility
+        let snap = MarketSnapshot {
+            prices: vec![100.0, 110.0, 120.0, 130.0, 200.0],
+        };
+        let d = compute_decision(&snap, &cfg());
+        assert_eq!(d.action, Action::Buy);
+    }
+
+    #[test]
+    fn downward_momentum_sells() {
+        let snap = MarketSnapshot {
+            prices: vec![200.0, 190.0, 180.0, 170.0, 100.0],
+        };
+        let d = compute_decision(&snap, &cfg());
+        assert_eq!(d.action, Action::Sell);
+    }
+
+    #[test]
+    fn flat_prices_hold() {
+        let snap = MarketSnapshot {
+            prices: vec![100.0, 100.0, 100.0, 100.0],
+        };
+        let d = compute_decision(&snap, &cfg());
+        assert_eq!(d.action, Action::Hold);
+    }
+
+    #[test]
+    fn low_volatility_hold() {
+        // All prices nearly identical → volatility < min (5.0)
+        let snap = MarketSnapshot {
+            prices: vec![100.0, 100.001, 100.002, 100.001],
+        };
+        let d = compute_decision(&snap, &cfg());
+        assert_eq!(d.action, Action::Hold);
+        assert!(d.reasoning.contains("low"));
+    }
+
+    #[test]
+    fn high_volatility_hold() {
+        // Extreme spread → volatility > max (500.0)
+        let snap = MarketSnapshot {
+            prices: vec![1.0, 2000.0, 1.0, 2000.0],
+        };
+        let d = compute_decision(&snap, &cfg());
+        assert_eq!(d.action, Action::Hold);
+        assert!(d.reasoning.contains("high"));
+    }
+
+    #[test]
+    fn confidence_capped_at_one() {
+        // Extreme momentum → normalize should cap at 1.0
+        let snap = MarketSnapshot {
+            prices: vec![100.0, 100.0, 100.0, 5000.0],
+        };
+        let d = compute_decision(&snap, &cfg());
+        assert!(d.confidence <= 1.0);
+    }
+}

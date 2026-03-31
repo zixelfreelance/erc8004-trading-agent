@@ -1,10 +1,12 @@
 pub mod adk_decision;
 mod adk_signal_tools;
-pub mod claude_decision;
+pub mod chain_identity;
+pub mod chain_reputation;
 pub mod decision_driver;
 pub mod http_logs;
 pub mod hybrid_decision;
 pub mod kraken_execution;
+pub mod kraken_mcp;
 pub mod kraken_market;
 pub mod momentum_decision;
 pub mod performance_tracker;

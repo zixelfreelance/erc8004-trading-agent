@@ -1,8 +1,11 @@
 pub mod decision_json;
+pub mod indicators;
 pub mod intent;
 pub mod log_record;
+pub mod metrics;
 pub mod model;
 pub mod performance;
+pub mod regime;
 pub mod risk;
 pub mod signed_intent;
 pub mod strategy;
