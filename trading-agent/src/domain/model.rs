@@ -9,7 +9,7 @@ pub enum Action {
     Hold,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct MarketData {
     pub pair: String,
     pub price: f64,

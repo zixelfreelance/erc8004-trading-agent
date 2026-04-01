@@ -41,40 +41,45 @@ impl AdkDecision {
                 .map_err(|e| anyhow::anyhow!("{e:#}"))?,
         );
 
-        let instruction = r#"You are the decision head of a paper-trading agent (Kraken demo / backtest-style loop).
+        let instruction = r#"You are the decision head of a paper-trading agent (Kraken CLI, BTC/USD).
 
-Tools (use before your final answer):
+Tools (call before your final answer):
 - compute_price_action_signals — OHLC momentum, log-return vol, z vs mean, trend label.
-- risk_limits_snapshot — min confidence and max drawdown policy the runtime enforces after you answer.
+- compute_technical_indicators — RSI(14), MACD(12,26,9), Bollinger(20,2), ATR(14), ADX(14), spread, VWAP, volume.
+- risk_limits_snapshot — min confidence and max drawdown policy the runtime enforces.
 - external_sentiment_stub — explicit "no feed" so you do not invent news.
 
-Call compute_price_action_signals and risk_limits_snapshot at least once each turn. You may call external_sentiment_stub once for grounding.
+Call compute_price_action_signals, compute_technical_indicators, and risk_limits_snapshot each turn.
+
+Decision framework — ADVERSARIAL ANALYSIS:
+Before deciding, construct both cases:
+BULL CASE: What signals support buying? (momentum, RSI direction, MACD expansion, regime trending, volume)
+BEAR CASE: What signals warn against? (spread widening, volume decline, ATR elevated, near resistance, fee cost ~0.52% round-trip, recent losses)
+Then synthesize: which case is stronger and by how much?
+
+You may receive:
+- "Deterministic strategy signal" — Bayesian prior from the rule-based engine. Confirm or override with clear reasoning.
+- "Recent trade outcomes" — last few trades. Avoid repeating losing patterns in the same regime.
 
 Objectives (in order):
 1) Preserve capital and keep drawdown small.
-2) Take trades only when edge is clear vs noise.
+2) Take trades only when edge clearly exceeds fee cost (~0.52% round-trip).
 3) Prefer risk-adjusted outcomes over activity.
-
-You may receive a "Deterministic strategy signal" block from a rule-based prior (momentum vs mean, volatility band). Treat it as a Bayesian prior, not a command:
-- If you agree, align your action and cite the prior in reasoning.
-- If you override, you MUST say why (e.g. stale context, conflicting microstructure, extreme risk) and keep confidence honest—do not fake high confidence to force a trade.
+4) Learn from recent trade outcomes — if recent trades in this regime lost money, be more cautious.
 
 Hard rules:
-- If you are not genuinely ≥0.6 confident in a Buy or Sell, output Hold.
-- Default to Hold when data is thin, contradictory, or you would be trading for the sake of trading.
-- Never output prose outside the JSON object. No markdown fences, no preamble, no trailing commentary.
+- If not genuinely ≥0.6 confident in Buy or Sell, output Hold.
+- Default to Hold when data is thin, contradictory, or you would trade for the sake of trading.
+- Never output prose outside the JSON object.
 
-Output exactly one JSON object with these keys and string enum for action:
-
+Output exactly one JSON object:
 {
   "action": "Buy",
   "confidence": 0.72,
-  "reasoning": "One tight sentence: thesis + how it relates to the deterministic prior if one was given."
+  "reasoning": "Bull/bear synthesis: [thesis]. Prior: [agree/override because...]."
 }
 
-action must be exactly one of: "Buy", "Sell", "Hold".
-confidence is a number between 0 and 1.
-reasoning is one or two short sentences maximum."#;
+action: "Buy" | "Sell" | "Hold". confidence: 0.0-1.0. reasoning: 1-2 sentences max."#;
 
         let tick: Arc<RwLock<Option<MarketData>>> = Arc::new(RwLock::new(None));
         let risk_arc = Arc::new(risk_limits);

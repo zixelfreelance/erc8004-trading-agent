@@ -36,7 +36,16 @@
     blocked_by_risk: boolean;
   };
 
+  type Metrics = {
+    ticks: number;
+    trades_executed: number;
+    trades_blocked: number;
+    holds: number;
+    errors: number;
+  };
+
   let logs = $state<LogRow[]>([]);
+  let metrics = $state<Metrics | null>(null);
   let error = $state<string | null>(null);
   let pnlCanvas = $state<HTMLCanvasElement | null>(null);
   let ddCanvas = $state<HTMLCanvasElement | null>(null);
@@ -47,9 +56,12 @@
 
   async function refresh() {
     try {
-      const r = await fetch(`${apiBase}/logs`);
-      if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-      logs = await r.json();
+      const [logsRes, metricsRes] = await Promise.all([
+        fetch(`${apiBase}/logs`),
+        fetch(`${apiBase}/metrics`),
+      ]);
+      if (logsRes.ok) logs = await logsRes.json();
+      if (metricsRes.ok) metrics = await metricsRes.json();
       error = null;
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -148,11 +160,36 @@
 
 <div class="page">
   <header class="hero">
-    <p class="eyebrow">Hackathon demo</p>
-    <h1>Agent decisions</h1>
-    <p class="lede">Live feed from <code>GET /logs</code> — trades, PnL, drawdown.</p>
+    <p class="eyebrow">AI Trading Agents Hackathon</p>
+    <h1>Proof-of-Trust Trading Agent</h1>
+    <p class="lede">Regime-aware AI agent with verifiable decisions, risk enforcement, and EIP-712 signed intents.</p>
     <button type="button" class="refresh" onclick={() => refresh()}>Refresh now</button>
   </header>
+
+  {#if metrics}
+    <section class="metrics-bar">
+      <div class="metric">
+        <span class="metric-value">{metrics.ticks}</span>
+        <span class="metric-label">Ticks</span>
+      </div>
+      <div class="metric executed">
+        <span class="metric-value">{metrics.trades_executed}</span>
+        <span class="metric-label">Executed</span>
+      </div>
+      <div class="metric blocked">
+        <span class="metric-value">{metrics.trades_blocked}</span>
+        <span class="metric-label">Blocked</span>
+      </div>
+      <div class="metric">
+        <span class="metric-value">{metrics.holds}</span>
+        <span class="metric-label">Holds</span>
+      </div>
+      <div class="metric">
+        <span class="metric-value">{metrics.errors}</span>
+        <span class="metric-label">Errors</span>
+      </div>
+    </section>
+  {/if}
 
   {#if error}
     <p class="err" role="alert">{error}</p>
@@ -289,6 +326,48 @@
 
   .refresh:hover {
     background: rgba(255, 255, 255, 0.1);
+  }
+
+  .metrics-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .metric {
+    flex: 1;
+    min-width: 100px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .metric-value {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fafaf9;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric-label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #78716c;
+    margin-top: 0.25rem;
+  }
+
+  .metric.executed .metric-value {
+    color: #99f6e4;
+  }
+
+  .metric.blocked .metric-value {
+    color: #fed7aa;
   }
 
   .err {

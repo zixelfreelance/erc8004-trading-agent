@@ -1,6 +1,9 @@
+use super::indicators;
 use super::model::{Action, Decision, MarketData};
+use super::regime::MarketRegime;
 
-pub const STRATEGY_DISPLAY_NAME: &str = "Momentum + Volatility Guard Agent";
+pub const STRATEGY_DISPLAY_NAME: &str =
+    "Regime-Aware Dual Strategy (Momentum + Mean-Reversion)";
 
 #[derive(Debug, Clone)]
 pub struct MarketSnapshot {
@@ -12,6 +15,10 @@ pub struct StrategyConfig {
     pub momentum_threshold: f64,
     pub volatility_min: f64,
     pub volatility_max: f64,
+    pub rsi_oversold: f64,
+    pub rsi_overbought: f64,
+    pub bollinger_period: usize,
+    pub bollinger_std: f64,
 }
 
 impl Default for StrategyConfig {
@@ -20,6 +27,10 @@ impl Default for StrategyConfig {
             momentum_threshold: 50.0,
             volatility_min: 5.0,
             volatility_max: 500.0,
+            rsi_oversold: 30.0,
+            rsi_overbought: 70.0,
+            bollinger_period: 20,
+            bollinger_std: 2.0,
         }
     }
 }
@@ -74,6 +85,99 @@ pub fn compute_decision(data: &MarketSnapshot, config: &StrategyConfig) -> Decis
         action,
         confidence,
         reasoning,
+    }
+}
+
+/// Mean-reversion strategy for ranging markets.
+/// Buy when price touches lower Bollinger band AND RSI is oversold.
+/// Sell when price touches upper Bollinger band AND RSI is overbought.
+pub fn compute_reversion_decision(
+    closes: &[f64],
+    _highs: &[f64],
+    _lows: &[f64],
+    config: &StrategyConfig,
+) -> Decision {
+    if closes.len() < 26 {
+        return Decision {
+            action: Action::Hold,
+            confidence: 0.3,
+            reasoning: "Insufficient data for mean-reversion".into(),
+        };
+    }
+
+    let price = *closes.last().unwrap();
+    let rsi_val = indicators::rsi(closes, 14);
+    let bb = indicators::bollinger(closes, config.bollinger_period, config.bollinger_std);
+
+    match (rsi_val, bb) {
+        (Some(rsi), Some(bands)) => {
+            if price <= bands.lower && rsi <= config.rsi_oversold {
+                let confidence = 0.6 + (config.rsi_oversold - rsi) / 100.0;
+                Decision {
+                    action: Action::Buy,
+                    confidence: confidence.min(0.9),
+                    reasoning: format!(
+                        "Mean-reversion: price at lower Bollinger ({:.0}), RSI={:.0} oversold",
+                        bands.lower, rsi
+                    ),
+                }
+            } else if price >= bands.upper && rsi >= config.rsi_overbought {
+                let confidence = 0.6 + (rsi - config.rsi_overbought) / 100.0;
+                Decision {
+                    action: Action::Sell,
+                    confidence: confidence.min(0.9),
+                    reasoning: format!(
+                        "Mean-reversion: price at upper Bollinger ({:.0}), RSI={:.0} overbought",
+                        bands.upper, rsi
+                    ),
+                }
+            } else {
+                Decision {
+                    action: Action::Hold,
+                    confidence: 0.5,
+                    reasoning: format!(
+                        "Mean-reversion: no extreme (RSI={:.0}, price between bands)",
+                        rsi
+                    ),
+                }
+            }
+        }
+        _ => Decision {
+            action: Action::Hold,
+            confidence: 0.3,
+            reasoning: "Mean-reversion: insufficient indicator data".into(),
+        },
+    }
+}
+
+/// Combined strategy: momentum for trending, mean-reversion for ranging, hold for transition.
+pub fn compute_regime_aware_decision(
+    data: &MarketData,
+    config: &StrategyConfig,
+    regime: MarketRegime,
+) -> Decision {
+    match regime {
+        MarketRegime::Trending => {
+            let snapshot = market_snapshot_from(data);
+            let mut d = compute_decision(&snapshot, config);
+            d.reasoning = format!("[trending] {}", d.reasoning);
+            d
+        }
+        MarketRegime::Ranging => {
+            let mut d = compute_reversion_decision(
+                &data.ohlc_closes,
+                &data.ohlc_highs,
+                &data.ohlc_lows,
+                config,
+            );
+            d.reasoning = format!("[ranging] {}", d.reasoning);
+            d
+        }
+        MarketRegime::Transition => Decision {
+            action: Action::Hold,
+            confidence: 0.4,
+            reasoning: "[transition] Regime unclear, holding".into(),
+        },
     }
 }
 
@@ -179,5 +283,40 @@ mod tests {
         };
         let d = compute_decision(&snap, &cfg());
         assert!(d.confidence <= 1.0);
+    }
+
+    #[test]
+    fn regime_aware_trending_uses_momentum() {
+        let data = MarketData {
+            pair: "BTCUSD".into(),
+            price: 200.0,
+            ohlc_closes: vec![100.0, 110.0, 120.0, 130.0, 200.0],
+            ohlc_highs: vec![105.0, 115.0, 125.0, 135.0, 205.0],
+            ohlc_lows: vec![95.0, 105.0, 115.0, 125.0, 195.0],
+            ..Default::default()
+        };
+        let d = compute_regime_aware_decision(&data, &cfg(), MarketRegime::Trending);
+        assert!(d.reasoning.contains("[trending]"));
+    }
+
+    #[test]
+    fn regime_aware_transition_holds() {
+        let data = MarketData {
+            pair: "BTCUSD".into(),
+            price: 100.0,
+            ohlc_closes: vec![100.0; 30],
+            ohlc_highs: vec![101.0; 30],
+            ohlc_lows: vec![99.0; 30],
+            ..Default::default()
+        };
+        let d = compute_regime_aware_decision(&data, &cfg(), MarketRegime::Transition);
+        assert_eq!(d.action, Action::Hold);
+        assert!(d.reasoning.contains("[transition]"));
+    }
+
+    #[test]
+    fn reversion_hold_insufficient_data() {
+        let d = compute_reversion_decision(&[100.0; 5], &[101.0; 5], &[99.0; 5], &cfg());
+        assert_eq!(d.action, Action::Hold);
     }
 }

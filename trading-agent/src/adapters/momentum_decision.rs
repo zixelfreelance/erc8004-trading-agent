@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 
 use crate::domain::model::{Decision, MarketData};
-use crate::domain::strategy::{compute_decision, market_snapshot_from, StrategyConfig};
+use crate::domain::regime;
+use crate::domain::strategy::{compute_regime_aware_decision, StrategyConfig};
 use crate::ports::decision::DecisionPort;
 
 pub struct MomentumVolatilityDecision {
@@ -23,7 +24,12 @@ impl Default for MomentumVolatilityDecision {
 #[async_trait]
 impl DecisionPort for MomentumVolatilityDecision {
     async fn decide(&self, data: &MarketData) -> anyhow::Result<Decision> {
-        let snapshot = market_snapshot_from(data);
-        Ok(compute_decision(&snapshot, &self.config))
+        let detected_regime = regime::detect_regime(
+            &data.ohlc_highs,
+            &data.ohlc_lows,
+            &data.ohlc_closes,
+            &regime::RegimeConfig::default(),
+        );
+        Ok(compute_regime_aware_decision(data, &self.config, detected_regime))
     }
 }
