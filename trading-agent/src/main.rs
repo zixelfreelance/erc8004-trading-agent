@@ -10,8 +10,10 @@ use adapters::chain_identity::ChainIdentityAdapter;
 use adapters::chain_reputation::ChainReputationAdapter;
 use adapters::decision_driver::DecisionDriver;
 use adapters::http_logs;
+use adapters::kraken_book;
 use adapters::kraken_execution::{ExecutionMode, KrakenExecution};
 use adapters::kraken_market::KrakenMarket;
+use adapters::kraken_ws::KrakenWsStream;
 use adapters::mock_market::MockMarket;
 use adapters::momentum_decision::MomentumVolatilityDecision;
 use adapters::performance_tracker::PerformanceTracker;
@@ -204,6 +206,17 @@ async fn main() -> anyhow::Result<()> {
         Box::new(m)
     };
 
+    // Start WebSocket stream for real-time price (supplements OHLC polling)
+    let ws_stream = if !demo_mode {
+        let ws = KrakenWsStream::start(&pair);
+        if ws.is_running() {
+            eprintln!("ws: real-time ticker stream started for {pair}");
+        }
+        Some(ws)
+    } else {
+        None
+    };
+
     let chain_id: u64 = std::env::var("CHAIN_ID")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -249,10 +262,39 @@ async fn main() -> anyhow::Result<()> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(100);
 
+    let book_interval: u64 = std::env::var("AGENT_BOOK_INTERVAL")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(10); // fetch order book every N ticks
+
     loop {
         if let Err(e) = agent.run_once().await {
             agent.metrics.record_error();
             eprintln!("tick error: {e:#}");
+        }
+
+        // Log WebSocket price if available (supplements OHLC)
+        if let Some(ref ws) = ws_stream {
+            if let Some(tick) = ws.latest_tick() {
+                eprintln!(
+                    "ws: price={:.2} bid={} ask={}",
+                    tick.price,
+                    tick.bid.map(|b| format!("{b:.2}")).unwrap_or_else(|| "?".into()),
+                    tick.ask.map(|a| format!("{a:.2}")).unwrap_or_else(|| "?".into()),
+                );
+            }
+        }
+
+        // Fetch order book depth periodically
+        let tick_count = agent.metrics.snapshot().ticks;
+        if !demo_mode && tick_count > 0 && tick_count % book_interval == 0 {
+            match kraken_book::get_book_depth(&pair, 10) {
+                Ok(book) => eprintln!(
+                    "book: spread={:.2} imbalance={:.3} bid_depth={:.4} ask_depth={:.4}",
+                    book.spread, book.imbalance, book.bid_depth, book.ask_depth
+                ),
+                Err(e) => eprintln!("book: fetch failed: {e:#}"),
+            }
         }
 
         // Post reputation on-chain every N ticks
