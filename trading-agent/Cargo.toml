@@ -25,4 +25,5 @@ ethers-signers = { version = "2", default-features = false }
 sha2 = "0.10"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "net"] }
 axum = "0.7"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 tower-http = { version = "0.5", features = ["cors"] }

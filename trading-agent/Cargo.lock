@@ -3586,6 +3586,7 @@ dependencies = [
  "dotenvy",
  "ethers-core",
  "ethers-signers",
+ "reqwest",
  "schemars 0.8.22",
  "serde",
  "serde_json",

@@ -49,8 +49,10 @@
   let error = $state<string | null>(null);
   let pnlCanvas = $state<HTMLCanvasElement | null>(null);
   let ddCanvas = $state<HTMLCanvasElement | null>(null);
+  let priceCanvas = $state<HTMLCanvasElement | null>(null);
   let pnlChart: Chart | null = null;
   let ddChart: Chart | null = null;
+  let priceChart: Chart | null = null;
 
   const apiBase = import.meta.env.VITE_LOGS_URL ?? 'http://127.0.0.1:3030';
 
@@ -139,6 +141,104 @@
         },
       });
     }
+
+    if (priceCanvas && logs.length > 20) {
+      priceChart?.destroy();
+
+      const period = 20;
+      const prices = logs.map(l => l.price);
+      const upper: (number | null)[] = [];
+      const middle: (number | null)[] = [];
+      const lower: (number | null)[] = [];
+
+      for (let i = 0; i < prices.length; i++) {
+        if (i < period - 1) {
+          upper.push(null);
+          middle.push(null);
+          lower.push(null);
+        } else {
+          const slice = prices.slice(i - period + 1, i + 1);
+          const avg = slice.reduce((a, b) => a + b, 0) / period;
+          const std = Math.sqrt(slice.reduce((a, b) => a + (b - avg) ** 2, 0) / period);
+          middle.push(avg);
+          upper.push(avg + 2 * std);
+          lower.push(avg - 2 * std);
+        }
+      }
+
+      priceChart = new Chart(priceCanvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Price',
+              data: prices,
+              borderColor: '#fafaf9',
+              borderWidth: 2,
+              pointRadius: 0,
+              tension: 0.1,
+            },
+            {
+              label: 'Upper BB',
+              data: upper,
+              borderColor: 'rgba(99, 102, 241, 0.5)',
+              borderWidth: 1,
+              borderDash: [4, 4],
+              pointRadius: 0,
+              fill: false,
+            },
+            {
+              label: 'SMA(20)',
+              data: middle,
+              borderColor: 'rgba(99, 102, 241, 0.8)',
+              borderWidth: 1,
+              pointRadius: 0,
+              fill: false,
+            },
+            {
+              label: 'Lower BB',
+              data: lower,
+              borderColor: 'rgba(99, 102, 241, 0.5)',
+              borderWidth: 1,
+              borderDash: [4, 4],
+              pointRadius: 0,
+              fill: '+1',
+              backgroundColor: 'rgba(99, 102, 241, 0.06)',
+            },
+            {
+              label: 'Buy',
+              data: logs.map((l, i) => l.action === 'Buy' && !l.blocked_by_risk ? prices[i] : null),
+              borderColor: '#10b981',
+              backgroundColor: '#10b981',
+              pointRadius: 6,
+              pointStyle: 'triangle',
+              showLine: false,
+              type: 'line' as const,
+            },
+            {
+              label: 'Sell',
+              data: logs.map((l, i) => l.action === 'Sell' && !l.blocked_by_risk ? prices[i] : null),
+              borderColor: '#f97316',
+              backgroundColor: '#f97316',
+              pointRadius: 6,
+              pointStyle: 'trianglePerp' as any,
+              showLine: false,
+              type: 'line' as const,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: true, labels: { color: '#a8a29e', boxWidth: 12 } } },
+          scales: {
+            x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8, color: '#78716c' } },
+            y: { title: { display: true, text: 'Price', color: '#a8a29e' }, ticks: { color: '#78716c' } },
+          },
+        },
+      });
+    }
   });
 
   onMount(() => {
@@ -148,6 +248,7 @@
       clearInterval(id);
       pnlChart?.destroy();
       ddChart?.destroy();
+      priceChart?.destroy();
     };
   });
 
@@ -228,6 +329,11 @@
       <h2>Drawdown</h2>
       <div class="canvas-wrap"><canvas bind:this={ddCanvas}></canvas></div>
     </article>
+
+    <article class="card chart chart-full">
+      <h2>Price & Bollinger Bands</h2>
+      <div class="canvas-wrap"><canvas bind:this={priceCanvas}></canvas></div>
+    </article>
   </section>
 
   <section class="card table-card">
@@ -253,7 +359,9 @@
               <td><span class="pill {row.action.toLowerCase()}">{row.action}</span></td>
               <td>{row.price.toLocaleString()}</td>
               <td>{(row.confidence * 100).toFixed(0)}%</td>
-              <td>{row.blocked_by_risk ? 'block' : '—'}</td>
+              <td class={row.blocked_by_risk ? 'risk-blocked' : 'risk-ok'}>
+                {row.blocked_by_risk ? row.reasoning.slice(0, 30) + '...' : '—'}
+              </td>
               <td>{row.balance.toFixed(2)}</td>
               <td>{row.pnl.toFixed(2)}</td>
               <td>{(row.drawdown * 100).toFixed(2)}</td>
@@ -386,9 +494,12 @@
   @media (min-width: 900px) {
     .grid {
       grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto;
+      grid-template-rows: auto auto auto;
     }
     .decision {
+      grid-column: 1 / -1;
+    }
+    .chart-full {
       grid-column: 1 / -1;
     }
   }
@@ -516,4 +627,7 @@
     background: rgba(120, 113, 108, 0.35);
     color: #e7e5e4;
   }
+
+  .risk-blocked { color: #fed7aa; font-size: 0.75rem; }
+  .risk-ok { color: #6ee7b7; }
 </style>
