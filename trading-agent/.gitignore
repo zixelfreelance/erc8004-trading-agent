@@ -9,6 +9,9 @@ target/
 # OS
 .DS_Store
 
+# mdbook build output
+book-output/
+
 # Runtime logs
 trades.log
 *.log

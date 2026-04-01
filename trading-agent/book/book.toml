@@ -1,0 +1,12 @@
+[book]
+title = "Proof-of-Trust Trading Agent"
+authors = ["zixlancer"]
+language = "en"
+src = "src"
+
+[build]
+build-dir = "../book-output"
+
+[output.html]
+git-repository-url = "https://github.com/zixelfreelance/erc8004-trading-agent"
+additional-css = ["custom.css"]
