@@ -1,6 +1,71 @@
-# Product Scope Report: Where We Are vs. Where This Goes
+# Product Scope — Proof-of-Trust Trading Agent
 
-> Context: Regulatory/product analysis of AI trading products, mapped against our hackathon agent.
+> Investor-ready product statement + compliance alignment. Updated 2026-04-01.
+
+---
+
+## Product Statement (Plain Language)
+
+**What:** A constrained AI trading agent that automates BTC/USD trades on Kraken within user-approved risk limits.
+
+**How:** No custody. Per-user API keys. Clear mandate capture. Every decision is cryptographically signed and verifiable on-chain via ERC-8004.
+
+**Not:** Not a hedge fund. Not custodial. Not unbounded AI. Not on-chain execution. The agent proposes — the risk system decides.
+
+---
+
+## Q2 2026 Scope (Frozen)
+
+| Dimension | Constraint | Reasoning |
+|---|---|---|
+| **Venue** | Kraken CLI only | Single integration, paper + live, well-documented API |
+| **Asset** | BTC/USD only | Deepest liquidity, tightest spreads, most data |
+| **Users** | Advanced individuals | Self-serve, own API keys, understand crypto risks |
+| **Mode** | Paper default, opt-in live | De-risk while building track record |
+| **Strategy** | Momentum + Claude hybrid | Validated, regime-aware, fee-filtered |
+| **Surfaces** | CLI loop + SvelteKit dashboard | Minimal UI, maximum auditability |
+| **Chain** | Base L2 (ERC-8004 identity only) | Low gas, EVM-compatible, no execution on-chain |
+| **Classification** | Signals + assisted automation | Not discretionary, not copy-trading |
+
+### Explicitly Out of Scope (Q2)
+
+- Multi-exchange or multi-asset
+- External capital / deposits from others
+- Copy trading / social features
+- On-chain execution (DEX routing)
+- Mobile app or margin trading
+
+---
+
+## Control Plane — 7 Risk Gates
+
+| Gate | Default | Enforcement |
+|---|---|---|
+| Max Drawdown | 5% | Hard stop — agent pauses if equity drops 5% from peak |
+| Position Limit | 1 open | No pyramiding — one position at a time |
+| Confidence Floor | 60% | Reject low-conviction signals |
+| Fee Filter | 0.7% min edge | Don't trade unless expected move covers fees + slippage |
+| Circuit Breaker | 3 consecutive losses | Pause after losing streak |
+| Daily Loss Limit | $5 | Hard daily cap on realized losses |
+| ATR Trailing Stop | 1.5x ATR | Mechanical exit — no discretion |
+
+All gates enforced **before** execution. The AI cannot bypass them.
+
+---
+
+## Trust Plane — ERC-8004 as Trust Wrapper (Not Execution Dependency)
+
+| On-Chain (Verifiable) | Off-Chain (Performant) |
+|---|---|
+| Agent identity (ERC-721 NFT) | Strategy logic (Rust) |
+| Risk policy summary | Real-time indicator computation |
+| Performance metrics (Sharpe, drawdown, win rate) | Trade execution (Kraken CLI) |
+| Validation artifact hashes (Merkle roots) | Full decision artifacts (JSON) |
+| MCP endpoint for discoverability | Dashboard + HTTP API |
+
+The agent works without the chain. The chain makes it **verifiable and discoverable**.
+
+---
 
 ## Where We Are Today
 
@@ -158,3 +223,25 @@ These are the areas where we need external research to inform next steps beyond 
 **Bottom line for the hackathon:** We've built the right architecture. The "constrained agent inside a hard risk envelope" is exactly what regulators and the analysis recommend. The hackathon proves it works. Productizing it requires legal, compliance, and operational infrastructure that's beyond code.
 
 **Bottom line for judges:** Position this as "we built the infrastructure for accountable AI finance" not "we built a trading bot." The regulatory alignment is a feature, not a burden.
+
+---
+
+## Q2 Deliverables
+
+1. **Live agent** on Kraken with real capital ($1K–$5K BTC/USD)
+2. **30+ days track record** with walk-forward validation report
+3. **Public dashboard** at a deployed URL
+4. **ERC-8004 identity** on Base mainnet with reputation scoring
+5. **Backtesting engine** with 6-month historical validation
+6. **Compliance docs**: AI disclosure, risk governance, mandate capture flow
+
+## Success Metrics
+
+| Metric | Target | How Measured |
+|---|---|---|
+| Sharpe Ratio | > 1.0 | Walk-forward validation over 30+ days |
+| Max Drawdown | < 5% | Live tracking via risk gate |
+| Win Rate | > 55% | Trade log analysis |
+| Uptime | > 99% | Agent health monitoring |
+| Trades Blocked | > 20% | Proof that risk gates are active, not decorative |
+| On-Chain Artifacts | 100% of trades | Merkle root anchoring on Base |

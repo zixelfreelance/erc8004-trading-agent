@@ -12,6 +12,7 @@ use adapters::decision_driver::DecisionDriver;
 use adapters::http_logs;
 use adapters::kraken_execution::{ExecutionMode, KrakenExecution};
 use adapters::kraken_market::KrakenMarket;
+use adapters::mock_market::MockMarket;
 use adapters::momentum_decision::MomentumVolatilityDecision;
 use adapters::performance_tracker::PerformanceTracker;
 use adapters::signer::{Eip712Signer, SignerDriver, SimpleSigner};
@@ -22,6 +23,7 @@ use domain::regime::RegimeDetector;
 use domain::risk::{PositionState, RiskConfig};
 use domain::strategy::{StrategyConfig, STRATEGY_DISPLAY_NAME};
 use ports::identity::IdentityPort;
+use ports::market::MarketPort;
 use ports::performance::PerformancePort;
 use ports::reputation::{ReputationMetric, ReputationPort};
 
@@ -109,6 +111,14 @@ async fn main() -> anyhow::Result<()> {
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(0.7),
+        min_ticks_between_trades: std::env::var("AGENT_MIN_TICKS_BETWEEN_TRADES")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(3),
+        risk_per_trade: std::env::var("AGENT_RISK_PER_TRADE")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0.01),
     };
 
     let strategy_display_name =
@@ -180,9 +190,19 @@ async fn main() -> anyhow::Result<()> {
     eprintln!("mode: {mode_label} | pair: {pair} | volume: {volume} | chain: {chain_status}");
     eprintln!("audit: GET http://{addr}/logs  GET http://{addr}/metrics");
 
-    let mut market = KrakenMarket::new(&pair);
-    market.ohlc_interval_minutes = ohlc_interval;
-    market.ohlc_lookback = ohlc_lookback;
+    let demo_mode = std::env::var("AGENT_DEMO_MODE")
+        .map(|v| v == "true" || v == "1")
+        .unwrap_or(false);
+
+    let market: Box<dyn MarketPort> = if demo_mode {
+        eprintln!("demo: using MockMarket with 50-tick replay sequence");
+        Box::new(MockMarket::demo_sequence())
+    } else {
+        let mut m = KrakenMarket::new(&pair);
+        m.ohlc_interval_minutes = ohlc_interval;
+        m.ohlc_lookback = ohlc_lookback;
+        Box::new(m)
+    };
 
     let chain_id: u64 = std::env::var("CHAIN_ID")
         .ok()
