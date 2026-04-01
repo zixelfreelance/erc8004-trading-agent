@@ -6,7 +6,7 @@
 
 **[AI Trading Agents Hackathon](https://lablab.ai/ai-hackathons/ai-trading-agents)** — March 30 – April 12, 2026 | Kraken Challenge + ERC-8004 Challenge
 
-**[GitHub Repository](https://github.com/zixelfreelance/erc8004-trading-agent)**
+**[GitHub Repository](https://github.com/zixelfreelance/erc8004-trading-agent)** | **[Video Demo](https://youtu.be/7zc0qDvCOKo)** | **[Pitch Deck (PDF)](./pitch-deck.pdf)** | **[Slides](./slides.html)**
 
 ---
 

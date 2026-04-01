@@ -17,7 +17,9 @@
 
 # Presentation
 
+- [Video Demo](./video.md)
 - [Pitch Deck (Slides)](./slides.md)
+- [Mind Map](./mind-map-page.md)
 
 # Reference
 
