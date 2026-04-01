@@ -9,12 +9,40 @@ use async_trait::async_trait;
 use tokio::sync::RwLock;
 
 use super::adk_signal_tools::signal_tools;
+use super::validation::SharedLogEntries;
 use crate::domain::decision_json::parse_decision_json;
 use crate::domain::model::{Decision, MarketData};
 use crate::domain::risk::RiskConfig;
 use crate::ports::decision::DecisionPort;
 
 const APP_NAME: &str = "trading-agent";
+
+/// Format last N executed (non-Hold) trades as context for Claude.
+pub fn format_recent_trades(entries: &SharedLogEntries, max: usize) -> String {
+    let guard = entries.lock().expect("log mutex poisoned");
+    let executed: Vec<_> = guard
+        .iter()
+        .filter(|r| r.action != "Hold" && !r.blocked_by_risk)
+        .collect();
+    if executed.is_empty() {
+        return String::new();
+    }
+    let recent = &executed[executed.len().saturating_sub(max)..];
+    let mut lines = String::from("Recent trade outcomes (learn from these):\n");
+    for (i, r) in recent.iter().enumerate() {
+        lines.push_str(&format!(
+            "{}. {} @ {:.2}, conf={:.2}, pnl={:.2}, dd={:.2}%\n",
+            i + 1,
+            r.action,
+            r.price,
+            r.confidence,
+            r.pnl,
+            r.drawdown * 100.0,
+        ));
+    }
+    lines.push_str("Avoid repeating losing patterns in the same regime.\n");
+    lines
+}
 
 /// ADK-backed decision port: Claude via Anthropic, tool-grounded signals, structured JSON.
 pub struct AdkDecision {
@@ -23,6 +51,8 @@ pub struct AdkDecision {
     session_id: SessionId,
     /// Current tick’s market snapshot for tool handlers (`compute_price_action_signals`).
     tick: Arc<RwLock<Option<MarketData>>>,
+    /// Shared trade log for recent trade history context.
+    pub log_entries: Option<SharedLogEntries>,
 }
 
 impl AdkDecision {
@@ -55,7 +85,7 @@ Decision framework — ADVERSARIAL ANALYSIS:
 Before deciding, construct both cases:
 BULL CASE: What signals support buying? (momentum, RSI direction, MACD expansion, regime trending, volume)
 BEAR CASE: What signals warn against? (spread widening, volume decline, ATR elevated, near resistance, fee cost ~0.52% round-trip, recent losses)
-Then synthesize: which case is stronger and by how much?
+Then synthesize: which case is stronger and by how much? If both cases have quantitative merit, commit to the stronger one. Do not retreat to Hold unless signals genuinely contradict. The runtime enforces risk gates — your role is conviction.
 
 You may receive:
 - "Deterministic strategy signal" — Bayesian prior from the rule-based engine. Confirm or override with clear reasoning.
@@ -110,6 +140,7 @@ action: "Buy" | "Sell" | "Hold". confidence: 0.0-1.0. reasoning: 1-2 sentences m
             sessions,
             session_id,
             tick,
+            log_entries: None,
         })
     }
 
@@ -174,6 +205,11 @@ action: "Buy" | "Sell" | "Hold". confidence: 0.0-1.0. reasoning: 1-2 sentences m
 #[async_trait]
 impl DecisionPort for AdkDecision {
     async fn decide(&self, data: &MarketData) -> anyhow::Result<Decision> {
-        self.decide_with_extra_context(data, "").await
+        let history = self
+            .log_entries
+            .as_ref()
+            .map(|e| format_recent_trades(e, 5))
+            .unwrap_or_default();
+        self.decide_with_extra_context(data, &history).await
     }
 }

@@ -7,12 +7,14 @@ use crate::domain::risk::RiskConfig;
 use crate::domain::strategy::{compute_regime_aware_decision, StrategyConfig};
 use crate::ports::decision::DecisionPort;
 
-use super::adk_decision::AdkDecision;
+use super::adk_decision::{format_recent_trades, AdkDecision};
+use super::validation::SharedLogEntries;
 
 /// Runs regime-aware deterministic strategy first, then ADK with that signal + indicators as prior.
 pub struct HybridAdkDecision {
     adk: AdkDecision,
     strategy: StrategyConfig,
+    log_entries: Option<SharedLogEntries>,
 }
 
 impl HybridAdkDecision {
@@ -20,7 +22,14 @@ impl HybridAdkDecision {
         Ok(Self {
             adk: AdkDecision::new(risk_limits).await?,
             strategy,
+            log_entries: None,
         })
+    }
+
+    pub fn with_log_entries(mut self, entries: SharedLogEntries) -> Self {
+        self.adk.log_entries = Some(entries.clone());
+        self.log_entries = Some(entries);
+        self
     }
 }
 
@@ -55,7 +64,7 @@ impl DecisionPort for HybridAdkDecision {
             .map(|s| format!("{:.2}", s))
             .unwrap_or_else(|| "N/A".into());
 
-        let extra = format!(
+        let mut extra = format!(
             r#"Deterministic strategy signal:
 - action: {action_s}
 - confidence: {:.4}
@@ -68,9 +77,23 @@ Indicator snapshot:
 - ATR(14): {atr}
 - Spread: {spread}
 
-Treat the strategy signal as a strong prior. Override only with clear justification referencing the indicators."#,
+Treat the strategy signal as a strong prior. Override only with clear justification referencing the indicators.
+
+IMPORTANT: Do not default to Hold out of uncertainty. If both bull and bear cases have quantitative merit, commit to the side with stronger backing. A confident wrong trade (caught by risk gates) is more useful than endless Holds. Risk gates downstream protect capital — your job is conviction."#,
             prior.confidence, prior.reasoning
         );
+
+        // Append recent trade history if available
+        let history = self
+            .log_entries
+            .as_ref()
+            .map(|e| format_recent_trades(e, 5))
+            .unwrap_or_default();
+        if !history.is_empty() {
+            extra.push_str("\n\n");
+            extra.push_str(&history);
+        }
+
         self.adk.decide_with_extra_context(data, &extra).await
     }
 }

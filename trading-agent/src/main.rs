@@ -118,21 +118,25 @@ async fn main() -> anyhow::Result<()> {
             _ => STRATEGY_DISPLAY_NAME.to_string(),
         });
 
+    let log_entries: SharedLogEntries = Arc::new(std::sync::Mutex::new(Vec::new()));
+
     let decision: DecisionDriver = match decision_mode.as_str() {
-        "adk" => DecisionDriver::Adk(Arc::new(
-            adapters::adk_decision::AdkDecision::new(risk_config.clone()).await?,
-        )),
-        "hybrid" => DecisionDriver::Hybrid(Arc::new(
-            adapters::hybrid_decision::HybridAdkDecision::new(
+        "adk" => {
+            let mut adk = adapters::adk_decision::AdkDecision::new(risk_config.clone()).await?;
+            adk.log_entries = Some(Arc::clone(&log_entries));
+            DecisionDriver::Adk(Arc::new(adk))
+        }
+        "hybrid" => {
+            let hybrid = adapters::hybrid_decision::HybridAdkDecision::new(
                 strategy_cfg.clone(),
                 risk_config.clone(),
             )
-            .await?,
-        )),
+            .await?
+            .with_log_entries(Arc::clone(&log_entries));
+            DecisionDriver::Hybrid(Arc::new(hybrid))
+        }
         _ => DecisionDriver::Momentum(MomentumVolatilityDecision::new(strategy_cfg)),
     };
-
-    let log_entries: SharedLogEntries = Arc::new(std::sync::Mutex::new(Vec::new()));
     let log_entries_srv = Arc::clone(&log_entries);
     let agent_metrics = metrics::new_metrics();
     let metrics_srv = Arc::clone(&agent_metrics);

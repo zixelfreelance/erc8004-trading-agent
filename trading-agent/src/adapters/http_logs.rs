@@ -29,12 +29,21 @@ async fn get_decision_schema() -> Json<serde_json::Value> {
     Json(serde_json::to_value(schema).unwrap_or_else(|_| serde_json::json!({})))
 }
 
+async fn get_agent_card() -> (axum::http::StatusCode, [(axum::http::header::HeaderName, &'static str); 1], &'static str) {
+    (
+        axum::http::StatusCode::OK,
+        [(axum::http::header::CONTENT_TYPE, "application/json")],
+        include_str!("../../contracts/agent-card.json"),
+    )
+}
+
 pub fn router(entries: SharedLogEntries, metrics: AgentMetrics) -> Router {
     let state = AppState { entries, metrics };
     Router::new()
         .route("/logs", get(get_logs))
         .route("/metrics", get(get_metrics))
         .route("/decision-schema", get(get_decision_schema))
+        .route("/.well-known/agent-card.json", get(get_agent_card))
         .with_state(state)
         .layer(CorsLayer::permissive())
 }
