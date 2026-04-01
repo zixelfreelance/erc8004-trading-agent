@@ -15,6 +15,10 @@
 - [AI Disclosure](./ai-disclosure.md)
 - [Revenue Roadmap](./revenue-roadmap.md)
 
+# Presentation
+
+- [Pitch Deck (Slides)](./slides.md)
+
 # Reference
 
 - [Changelog](./changelog.md)
