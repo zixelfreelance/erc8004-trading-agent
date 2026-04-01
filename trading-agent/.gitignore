@@ -1,1 +1,14 @@
+# Build artifacts
+target/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+
+# Runtime logs
 trades.log
+*.log

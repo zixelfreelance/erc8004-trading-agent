@@ -1,5 +1,37 @@
-# Sibling clones (own git history). Re-create as needed:
-#   gh repo clone krakenfx/kraken-cli
-#   gh repo clone sudeepb02/awesome-erc8004
+# Build artifacts
+**/target/
+**/node_modules/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Sibling clones (own git history)
 kraken-cli/
 awesome-erc8004/
+
+# Research / scratch (not part of submission)
+adk-rust/
+claude-code/
+claude-code-best-practice/
+claude-howto/
+erc8004-demo-agent/
+everything-claude-code/
+oh-my-claudecode/
+trading-agents-tauric/
+trustless-agent-commerce/
+trustless-agents-competitor/
+competitive-intel.md
+competitive-landscape.md
+gemini-research.md
+perplexity-infra-research.md
+perplexity-strategy-research.md
+session-handoff.md
+PLAN.md

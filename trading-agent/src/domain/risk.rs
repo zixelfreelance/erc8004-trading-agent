@@ -8,6 +8,7 @@ pub struct PositionState {
     pub daily_loss: f64,
     pub circuit_breaker_active: bool,
     pub last_balance_after_trade: Option<f64>,
+    pub last_trade_tick: u64,
 }
 
 impl Default for PositionState {
@@ -18,6 +19,7 @@ impl Default for PositionState {
             daily_loss: 0.0,
             circuit_breaker_active: false,
             last_balance_after_trade: None,
+            last_trade_tick: 0,
         }
     }
 }
@@ -48,6 +50,8 @@ pub struct RiskConfig {
     pub max_consecutive_losses: u32,
     pub daily_loss_limit: f64,
     pub min_edge_pct: f64,
+    pub min_ticks_between_trades: u64,
+    pub risk_per_trade: f64,
 }
 
 impl Default for RiskConfig {
@@ -58,8 +62,31 @@ impl Default for RiskConfig {
             max_consecutive_losses: 3,
             daily_loss_limit: 5.0,
             min_edge_pct: 0.7,
+            min_ticks_between_trades: 3,
+            risk_per_trade: 0.01,
         }
     }
+}
+
+/// Compute ATR-scaled position size. Returns volume in asset units.
+/// Scales between 20% and 100% of `base_volume` based on risk budget / ATR.
+pub fn compute_position_size(
+    base_volume: f64,
+    balance: f64,
+    risk_per_trade: f64,
+    atr: f64,
+    atr_stop_multiplier: f64,
+    confidence: f64,
+) -> f64 {
+    if atr <= 0.0 || atr_stop_multiplier <= 0.0 {
+        return base_volume;
+    }
+    let stop_distance = atr * atr_stop_multiplier;
+    let risk_budget = balance * risk_per_trade;
+    // Scale by confidence: 0.6 → 60% of budget, 1.0 → 100%
+    let conf_factor = confidence.clamp(0.6, 1.0);
+    let raw = (risk_budget * conf_factor) / stop_distance;
+    raw.clamp(base_volume * 0.2, base_volume)
 }
 
 /// Returns true if the expected price move justifies the round-trip fee cost.
@@ -75,12 +102,42 @@ pub fn apply_risk(
     perf: &Performance,
     cfg: &RiskConfig,
 ) -> (Decision, bool) {
+    apply_risk_with_tick(decision, position, perf, cfg, 0)
+}
+
+pub fn apply_risk_with_tick(
+    decision: Decision,
+    position: &PositionState,
+    perf: &Performance,
+    cfg: &RiskConfig,
+    current_tick: u64,
+) -> (Decision, bool) {
     if position.circuit_breaker_active {
         return (
             Decision {
                 action: Action::Hold,
                 confidence: decision.confidence,
                 reasoning: format!("risk: circuit breaker active — {}", decision.reasoning),
+            },
+            true,
+        );
+    }
+
+    // Trade cooldown: block trades too close together
+    if decision.action != Action::Hold
+        && current_tick > 0
+        && position.last_trade_tick > 0
+        && current_tick.saturating_sub(position.last_trade_tick) < cfg.min_ticks_between_trades
+    {
+        let ticks_since = current_tick.saturating_sub(position.last_trade_tick);
+        return (
+            Decision {
+                action: Action::Hold,
+                confidence: decision.confidence,
+                reasoning: format!(
+                    "risk: cooldown ({} ticks since last trade, min {}) — {}",
+                    ticks_since, cfg.min_ticks_between_trades, decision.reasoning
+                ),
             },
             true,
         );
@@ -371,11 +428,47 @@ mod tests {
             daily_loss: 20.0,
             circuit_breaker_active: true,
             last_balance_after_trade: Some(80.0),
+            last_trade_tick: 50,
         };
         pos.reset_circuit_breaker();
         assert!(!pos.circuit_breaker_active);
         assert_eq!(pos.consecutive_losses, 0);
         assert!((pos.daily_loss - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn cooldown_blocks_trade_too_soon() {
+        let mut pos = PositionState::default();
+        pos.last_trade_tick = 10;
+        let cfg = RiskConfig::default(); // min_ticks_between_trades = 3
+        let (d, blocked) = apply_risk_with_tick(buy_decision(0.8), &pos, &default_perf(), &cfg, 12);
+        assert!(blocked, "Should block trade 2 ticks after last (min 3)");
+        assert_eq!(d.action, Action::Hold);
+        assert!(d.reasoning.contains("cooldown"));
+    }
+
+    #[test]
+    fn cooldown_allows_trade_after_enough_ticks() {
+        let mut pos = PositionState::default();
+        pos.last_trade_tick = 10;
+        let cfg = RiskConfig::default();
+        let (d, blocked) = apply_risk_with_tick(buy_decision(0.8), &pos, &default_perf(), &cfg, 13);
+        assert!(!blocked, "Should allow trade 3 ticks after last");
+        assert_eq!(d.action, Action::Buy);
+    }
+
+    #[test]
+    fn position_sizing_scales_with_atr() {
+        let size = compute_position_size(0.001, 10000.0, 0.01, 200.0, 1.5, 0.8);
+        assert!(size > 0.0);
+        assert!(size <= 0.001, "Should not exceed base volume");
+        assert!(size >= 0.001 * 0.2, "Should not go below 20% of base");
+    }
+
+    #[test]
+    fn position_sizing_zero_atr_returns_base() {
+        let size = compute_position_size(0.001, 10000.0, 0.01, 0.0, 1.5, 0.8);
+        assert!((size - 0.001).abs() < f64::EPSILON);
     }
 
     #[test]
