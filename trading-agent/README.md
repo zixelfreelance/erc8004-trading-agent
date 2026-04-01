@@ -52,6 +52,9 @@ cargo build
 # Run in paper mode (default)
 cargo run
 
+# Run in demo mode (reproducible 50-tick sequence for presentations)
+AGENT_DEMO_MODE=true cargo run
+
 # Run in live mode (requires Kraken API keys configured)
 AGENT_EXECUTION_MODE=live AGENT_VOLUME=0.0001 cargo run
 
@@ -87,6 +90,7 @@ curl http://localhost:3030/logs
 | `GET /metrics` | `{ ticks, trades_executed, trades_blocked, holds, errors }` |
 | `GET /logs` | Full trade history with decision artifacts |
 | `GET /decision-schema` | JSON Schema for Decision type |
+| `GET /.well-known/agent-card.json` | ERC-8004 Agent Card for discovery |
 
 ## Strategies
 

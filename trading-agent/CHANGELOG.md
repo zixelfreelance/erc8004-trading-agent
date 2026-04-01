@@ -7,6 +7,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 ### Added
+- **Demo mode:** `AGENT_DEMO_MODE=true` replays 50-tick MockMarket sequence for reliable demos
+- **WebSocket streaming:** `KrakenWsStream` logs real-time price/bid/ask each tick
+- **Order book depth:** periodic `kraken book` fetch with spread + imbalance logging
+- **IPFS pinning:** Pinata adapter for pinning validation artifacts (`adapters/ipfs_pinner.rs`)
+- **Integration tests:** 5 end-to-end tests with MockMarket (hold, buy, multi-tick, demo, risk block)
+- **Trade cooldown:** `min_ticks_between_trades` in RiskConfig (env: `AGENT_MIN_TICKS_BETWEEN_TRADES`, default 3)
+- **Volatility-scaled position sizing:** `compute_position_size()` — risk_budget * confidence / (ATR * stop), 20-100% of base volume
+- **Mean-reversion strategy:** Bollinger + RSI for ranging markets, auto-selected by regime
+- **Dual-mode strategy:** `compute_regime_aware_decision()` — momentum in trending, mean-reversion in ranging, hold in transition
+- **Adversarial prompts:** Bull/bear framing in ADK instruction, conviction-biased
+- **Recent trade history:** Claude sees last 5 executed trades as learning context
+- **Agent Card endpoint:** `/.well-known/agent-card.json` served via HTTP (ERC-8004 discovery)
+- **Dashboard metrics bar:** ticks, executed, blocked, holds, errors
+- **Dashboard price chart:** Bollinger Bands + buy/sell trade markers
 - **Wired into main loop:** regime detection, fee filter, ATR trailing stops
 - Regime detector feeds ADX + Bollinger bandwidth each tick, blocks trades during transition
 - Fee filter rejects trades with edge < min_edge_pct (default 0.7%)
