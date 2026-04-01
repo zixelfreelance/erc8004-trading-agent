@@ -12,3 +12,9 @@ target/
 # Runtime logs
 trades.log
 *.log
+
+# Private docs (local only — never push)
+docs/REGISTRATION.md
+docs/MANUAL-CHECKLIST.md
+docs/PERPLEXITY_RESEARCH_PROMPTS.md
+docs/sprints/
