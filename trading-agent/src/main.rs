@@ -32,6 +32,7 @@ use ports::reputation::{ReputationMetric, ReputationPort};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    dotenvy::dotenv().ok();
     let pair = std::env::var("AGENT_PAIR").unwrap_or_else(|_| "BTCUSD".to_string());
     let volume = std::env::var("AGENT_VOLUME").unwrap_or_else(|_| "0.001".to_string());
     let intent_amount: f64 = volume.parse().unwrap_or(0.001);
