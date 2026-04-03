@@ -10,6 +10,7 @@ use adapters::chain_identity::ChainIdentityAdapter;
 use adapters::chain_reputation::ChainReputationAdapter;
 use adapters::decision_driver::DecisionDriver;
 use adapters::http_logs;
+use adapters::ipfs_pinner::IpfsPinner;
 use adapters::kraken_book;
 use adapters::kraken_execution::{ExecutionMode, KrakenExecution};
 use adapters::kraken_market::KrakenMarket;
@@ -267,6 +268,16 @@ async fn main() -> anyhow::Result<()> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(10); // fetch order book every N ticks
 
+    let ipfs_pinner = IpfsPinner::from_env();
+    if ipfs_pinner.is_some() {
+        eprintln!("ipfs: Pinata configured — artifacts will be pinned every {reputation_interval} ticks");
+    }
+
+    let ipfs_interval: u64 = std::env::var("AGENT_IPFS_INTERVAL")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(50); // pin to IPFS every N ticks
+
     loop {
         if let Err(e) = agent.run_once().await {
             agent.metrics.record_error();
@@ -313,6 +324,35 @@ async fn main() -> anyhow::Result<()> {
             match reputation_adapter.post_feedback(0, &metric, "").await {
                 Ok(tx) => eprintln!("chain: reputation posted (tx={tx}, pnl={:.2})", perf.pnl),
                 Err(e) => eprintln!("chain: reputation post failed: {e:#}"),
+            }
+        }
+
+        // Pin latest artifact to IPFS periodically
+        let tick_count = agent.metrics.snapshot().ticks;
+        if let Some(ref pinner) = ipfs_pinner {
+            if tick_count > 0 && tick_count % ipfs_interval == 0 {
+                let perf = agent.performance.snapshot();
+                let metrics_snap = agent.metrics.snapshot();
+                let artifact = serde_json::json!({
+                    "agent_id": agent.agent_id,
+                    "tick": tick_count,
+                    "performance": {
+                        "balance": perf.balance,
+                        "pnl": perf.pnl,
+                        "drawdown": perf.drawdown,
+                    },
+                    "metrics": {
+                        "ticks": metrics_snap.ticks,
+                        "executed": metrics_snap.trades_executed,
+                        "blocked": metrics_snap.trades_blocked,
+                        "errors": metrics_snap.errors,
+                    },
+                    "timestamp": chrono::Utc::now().to_rfc3339(),
+                });
+                match pinner.pin_artifact(&artifact).await {
+                    Ok(cid) => eprintln!("ipfs: artifact pinned (cid={cid})"),
+                    Err(e) => eprintln!("ipfs: pin failed: {e:#}"),
+                }
             }
         }
 
