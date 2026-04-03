@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: trading-agent
+    runtime: docker
+    repo: https://github.com/zixelfreelance/erc8004-trading-agent
+    branch: main
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /metrics
+    envVars:
+      - key: AGENT_HTTP_PORT
+        value: "10000"
+      - key: AGENT_PAIR
+        value: BTCUSD
+      - key: AGENT_VOLUME
+        value: "0.001"
+      - key: AGENT_EXECUTION_MODE
+        value: paper
+      - key: AGENT_DECISION
+        value: momentum
+      - key: AGENT_INTERVAL_SECS
+        value: "10"
+      - key: CHAIN_ID
+        value: "11155111"
+      - key: CHAIN_RPC_URL
+        sync: false
+      - key: IDENTITY_REGISTRY
+        value: "0xc83F0B94E7969Cc2265aB0A187Ba0F2e6A5B9554"
+      - key: REPUTATION_REGISTRY
+        value: "0x40dB57F7D848457289CEda81F39df15C4203D576"
+      - key: AGENT_SIGNING_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PINATA_API_KEY
+        sync: false
+      - key: PINATA_API_SECRET
+        sync: false

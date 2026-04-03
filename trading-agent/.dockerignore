@@ -1,0 +1,10 @@
+target/
+book-output/
+docs/
+contracts/
+ui/
+trades.log
+.env
+.git
+.DS_Store
+*.md
