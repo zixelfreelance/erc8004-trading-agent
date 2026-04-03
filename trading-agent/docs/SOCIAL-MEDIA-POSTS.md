@@ -66,6 +66,44 @@ github.com/zixelfreelance/erc8004-trading-agent
 #ERC8004 #DeFi
 ```
 
+### Post 2.5 — Day 4 Progress Update (April 4)
+```
+Day 4 of @lablabai AI Trading Agents hackathon
+
+Proof-of-Trust is now live:
+- 3 smart contracts deployed to Sepolia
+- EIP-712 signed trade intents
+- Real-time dashboard on Vercel
+- 10 risk controls, 7 technical indicators
+- IPFS audit trail via Pinata
+
+Paper trading with live BTC prices. Agent holds when unsure.
+
+Built with Rust + Solidity + @krakenfx CLI
+
+@Surgexyz_ #AITradingAgents #ERC8004
+```
+(Attach dashboard screenshot from erc8004-trading-agent.vercel.app)
+
+### Post 2.6 — Execution Modes Explainer (April 4)
+```
+How our AI agent handles trust at every layer:
+
+3 execution modes:
+  Paper → real prices, fake money (no API key)
+  Demo → offline replay (reproducible)
+  Live → real Kraken orders (API key required)
+
+3 decision modes:
+  Momentum → pure rules (no LLM needed)
+  ADK → Claude makes all calls
+  Hybrid → rules + Claude final say
+
+Default: paper + momentum = $0, no keys, full demo.
+
+@lablabai @krakenfx @Surgexyz_
+```
+
 ### Post 3 — Dashboard Demo (April 5)
 ```
 Real-time dashboard for our AI trading agent:

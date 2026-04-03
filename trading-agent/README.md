@@ -42,6 +42,26 @@ ERC-8004 Identity Registry
 
 **Hexagonal architecture:** Ports define contracts. Adapters are swappable. Domain logic is pure.
 
+## Execution Modes
+
+| Mode | What it does | Kraken API key? | Cost |
+|---|---|---|---|
+| **Paper** (default) | Simulates trades via `kraken paper buy/sell` — fake money, real prices | No | $0 |
+| **Demo** | Replays 50 hardcoded ticks — fully offline, reproducible | No | $0 |
+| **Live** | Places real orders on Kraken exchange with real money | Yes | Real USD |
+
+Paper mode is the default and requires no API keys. Live mode requires a Kraken account with trading API keys and funded balance.
+
+## Decision Modes
+
+| Mode | How it decides | Anthropic API key? |
+|---|---|---|
+| **Momentum** (default) | Pure rules: RSI, MACD, Bollinger, ATR, regime detection | No |
+| **ADK** | Claude makes all trading decisions via Anthropic ADK-Rust | Yes |
+| **Hybrid** | Rules generate signal, Claude makes final call | Yes |
+
+Momentum mode is fully self-contained — no external AI API needed. ADK and Hybrid modes use Claude as an additional decision layer with adversarial bull/bear prompts.
+
 ## Quick Start
 
 ```bash
@@ -49,11 +69,14 @@ ERC-8004 Identity Registry
 cd trading-agent
 cargo build
 
-# Run in paper mode (default)
+# Run in paper mode (default — no API keys needed)
 cargo run
 
 # Run in demo mode (reproducible 50-tick sequence for presentations)
 AGENT_DEMO_MODE=true cargo run
+
+# Run with Claude AI decisions (requires ANTHROPIC_API_KEY in .env)
+AGENT_DECISION=hybrid cargo run
 
 # Run in live mode (requires Kraken API keys configured)
 AGENT_EXECUTION_MODE=live AGENT_VOLUME=0.0001 cargo run
@@ -61,6 +84,7 @@ AGENT_EXECUTION_MODE=live AGENT_VOLUME=0.0001 cargo run
 # Access endpoints
 curl http://localhost:3030/metrics
 curl http://localhost:3030/logs
+curl http://localhost:3030/.well-known/agent-card.json
 ```
 
 ## Configuration
@@ -79,9 +103,11 @@ curl http://localhost:3030/logs
 | `AGENT_MAX_CONSECUTIVE_LOSSES` | `3` | Circuit breaker: pause after N losses |
 | `AGENT_DAILY_LOSS_LIMIT` | `5.0` | Circuit breaker: max daily loss in USD |
 | `AGENT_HTTP_PORT` | `3030` | Dashboard API port |
-| `ANTHROPIC_API_KEY` | — | Required for `adk` / `hybrid` modes |
+| `ANTHROPIC_API_KEY` | — | Only needed for `adk` / `hybrid` decision modes |
 | `AGENT_SIGNING_KEY` | `dev-local-key` | Hex private key → EIP-712, else SHA-256 |
 | `CHAIN_ID` | `11155111` | Chain ID for EIP-712 domain (Sepolia) |
+| `PINATA_API_KEY` | — | IPFS pinning for audit artifacts (optional) |
+| `PINATA_API_SECRET` | — | IPFS pinning for audit artifacts (optional) |
 
 ## HTTP API
 
@@ -124,8 +150,8 @@ Stateful detector with hysteresis classifies market as **Trending** (ADX > 22), 
 - **Execution:** Kraken CLI (paper + live modes)
 - **Signing:** EIP-712 ECDSA (secp256k1) with SHA-256 fallback
 - **On-chain:** Solidity on Sepolia — Identity Registry, Reputation Registry, Risk Router
-- **Dashboard:** SvelteKit
-- **On-chain:** Solidity on Base Sepolia (in progress)
+- **IPFS:** Pinata — cryptographic audit trail for trade artifacts
+- **Dashboard:** SvelteKit on Vercel
 
 ## Hackathon
 
