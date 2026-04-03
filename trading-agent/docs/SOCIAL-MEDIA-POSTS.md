@@ -1,0 +1,182 @@
+# Social Media Posts — Proof-of-Trust Trading Agent
+
+## X/Twitter Posts (max 280 chars for free tier)
+
+### Post 1 — Announcement (April 1)
+```
+Building a trustless AI trading agent for @lablabai hackathon
+
+The AI can't break its own rules:
+→ ERC-8004 on-chain identity
+→ 7 enforced risk gates
+→ EIP-712 signed intents
+
+AI proposes. Contracts enforce.
+
+@krakenfx @Surgexyz_ #AITradingAgents
+```
+
+### Post 2 — Tech Thread (April 3)
+```
+How do you trust an AI trading agent?
+
+You don't. You verify.
+
+I built a trading agent with 7 risk gates it CANNOT bypass — and every decision is signed on-chain.
+
+Thread 🧵
+
+@lablabai @krakenfx @Surgexyz_
+```
+
+Reply 1:
+```
+The Trust Triangle — every trade must satisfy:
+
+1. Identity (ERC-8004) — who acted
+2. Constraints (Risk Router) — what was allowed
+3. Auditability (Validation Artifacts) — what happened
+
+All three. Every time.
+```
+
+Reply 2:
+```
+7 risk gates the AI cannot bypass:
+
+• 5% max drawdown
+• 1 position limit
+• 60% confidence floor
+• 0.7% fee filter
+• Regime filter
+• Circuit breaker (3 losses)
+• ATR trailing stop
+
+20%+ of trades get blocked. Proof the gates work.
+```
+
+Reply 3:
+```
+Tech: Rust + 3 Solidity contracts + SvelteKit dashboard + Claude AI + Kraken CLI
+
+70+ tests. EIP-712 signed intents. Agent Card at /.well-known/agent-card.json
+
+github.com/zixelfreelance/erc8004-trading-agent
+
+#ERC8004 #DeFi
+```
+
+### Post 3 — Dashboard Demo (April 5)
+```
+Real-time dashboard for our AI trading agent:
+
+• Price + Bollinger Bands
+• Buy/Sell markers
+• PnL tracking
+• Risk gate decisions in trade log
+
+Every blocked trade is visible. Transparency by default.
+
+@lablabai @krakenfx @Surgexyz_ #AITradingAgents
+```
+(Attach dashboard screenshot)
+
+### Post 4 — Agent Card (April 7)
+```
+Our AI agent serves an Agent Card at /.well-known/agent-card.json
+
+Like robots.txt — but for AI trading agents.
+
+Identity, capabilities, risk controls, endpoints — all discoverable on-chain via ERC-8004.
+
+@lablabai @krakenfx @Surgexyz_
+```
+(Attach agent-card.json screenshot)
+
+### Post 5 — Risk Controls (April 9)
+```
+"But what if the AI goes rogue?"
+
+It can't. 7 gates enforce limits BEFORE execution:
+- Drawdown cap
+- Position limit
+- Confidence floor
+- Fee filter
+- Regime filter
+- Circuit breaker
+- Trailing stop
+
+The AI proposes. The system decides.
+
+@lablabai @krakenfx @Surgexyz_
+```
+
+### Post 6 — Final Push (April 11)
+```
+Submitting our AI trading agent for @lablabai hackathon tomorrow.
+
+Proof-of-Trust: an agent that proves every decision on-chain.
+
+Rust + Solidity + SvelteKit + Claude AI + Kraken CLI
+
+github.com/zixelfreelance/erc8004-trading-agent
+
+@krakenfx @Surgexyz_ #AITradingAgents
+```
+
+---
+
+## LinkedIn Posts
+
+### Post 1 — Announcement (April 1)
+```
+I'm building a trustless AI trading agent for the lablab.ai AI Trading Agents hackathon ($55K prize pool).
+
+The core idea: AI is untrusted input. The agent proposes — the system decides.
+
+What I built:
+• On-chain agent identity via ERC-8004 (ERC-721 NFT)
+• 7 enforced risk gates the AI cannot bypass
+• EIP-712 signed trade intents for every decision
+• Real-time dashboard with Bollinger Bands, PnL, and drawdown tracking
+• Cryptographic audit trail — not logging, proof
+
+Tech: Rust, Solidity, SvelteKit, Claude AI (Anthropic ADK), Kraken CLI
+
+The thesis: the winning AI trading agents won't have the best returns — they'll be the ones you can verify and trust.
+
+GitHub: https://github.com/zixelfreelance/erc8004-trading-agent
+
+#AI #DeFi #Trading #ERC8004 #Hackathon #Rust #Solidity
+```
+
+### Post 2 — Mid-Hackathon Update (April 6)
+```
+Week 1 update on my AI trading agent build:
+
+✅ 70+ tests passing
+✅ 3 Solidity contracts deployed
+✅ Real-time SvelteKit dashboard
+✅ ERC-8004 agent identity registered
+✅ Risk gates blocking 20%+ of trades
+
+The best part? Every decision is signed with EIP-712 and verifiable on-chain. Not logging — cryptographic proof.
+
+Next: live trading via Kraken CLI + video demo.
+
+#AI #DeFi #BuildInPublic
+```
+
+---
+
+## Posting Schedule
+
+| Date | Platform | Post |
+|------|----------|------|
+| Apr 1 | X + LinkedIn | Post 1 — Announcement |
+| Apr 3 | X | Post 2 — Tech Thread |
+| Apr 5 | X | Post 3 — Dashboard Demo (with screenshot) |
+| Apr 6 | LinkedIn | Post 2 — Mid-Hackathon Update |
+| Apr 7 | X | Post 4 — Agent Card |
+| Apr 9 | X | Post 5 — Risk Controls |
+| Apr 11 | X + LinkedIn | Post 6 — Final Push |

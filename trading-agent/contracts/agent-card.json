@@ -24,7 +24,7 @@
   "registrations": [
     {
       "agentId": 0,
-      "agentRegistry": "eip155:11155111:0xIDENTITY_REGISTRY_ADDRESS"
+      "agentRegistry": "eip155:11155111:0xc83F0B94E7969Cc2265aB0A187Ba0F2e6A5B9554"
     }
   ],
   "supportedTrust": ["reputation", "validation"],

@@ -1,0 +1,6 @@
+[submodule "trading-agent/contracts/lib/forge-std"]
+	path = trading-agent/contracts/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "trading-agent/contracts/lib/openzeppelin-contracts"]
+	path = trading-agent/contracts/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

@@ -10,5 +10,8 @@ out/
 # Docs
 docs/
 
+# Lockfile
+foundry.lock
+
 # Dotenv file
 .env

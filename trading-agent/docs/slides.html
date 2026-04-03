@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proof-of-Trust Trading Agent — Pitch Deck</title>
+<style>
+  @page { size: 16in 9in; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0c0a09; color: #e7e5e4; }
+  .slide {
+    width: 100vw; height: 56.25vw;
+    max-width: 1600px; max-height: 900px;
+    padding: 60px 80px;
+    display: flex; flex-direction: column; justify-content: center;
+    page-break-after: always;
+    position: relative;
+    background: radial-gradient(120% 80% at 10% 0%, #1c1917 0%, #0c0a09 45%, #020617 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .slide:last-child { page-break-after: avoid; }
+  h1 { font-size: 52px; font-weight: 700; color: #fafaf9; margin-bottom: 16px; line-height: 1.15; }
+  h2 { font-size: 40px; font-weight: 700; color: #fafaf9; margin-bottom: 24px; line-height: 1.2; }
+  h3 { font-size: 24px; font-weight: 600; color: #a8a29e; margin-bottom: 20px; }
+  p { font-size: 22px; color: #d6d3d1; line-height: 1.6; margin-bottom: 16px; }
+  .eyebrow { font-size: 14px; text-transform: uppercase; letter-spacing: 0.15em; color: #0d9488; margin-bottom: 12px; font-weight: 600; }
+  .tagline { font-size: 28px; color: #a8a29e; font-weight: 400; margin-bottom: 32px; }
+  .accent { color: #0d9488; }
+  .warn { color: #f97316; }
+  ul { list-style: none; padding: 0; }
+  ul li { font-size: 22px; color: #d6d3d1; padding: 10px 0; padding-left: 28px; position: relative; line-height: 1.5; }
+  ul li::before { content: ''; position: absolute; left: 0; top: 18px; width: 12px; height: 12px; background: #0d9488; border-radius: 3px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; margin-top: 20px; }
+  .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 28px; }
+  .card h3 { color: #fafaf9; font-size: 20px; margin-bottom: 12px; }
+  .card p { font-size: 18px; margin-bottom: 8px; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 56px; font-weight: 800; color: #0d9488; display: block; font-variant-numeric: tabular-nums; }
+  .stat .label { font-size: 16px; color: #a8a29e; text-transform: uppercase; letter-spacing: 0.08em; }
+  .footer { position: absolute; bottom: 30px; left: 80px; right: 80px; display: flex; justify-content: space-between; font-size: 14px; color: #57534e; }
+  .arch { font-family: 'Courier New', monospace; font-size: 18px; color: #a8a29e; line-height: 1.8; background: rgba(255,255,255,0.03); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); }
+  .arch .highlight { color: #0d9488; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th { text-align: left; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; color: #a8a29e; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  td { font-size: 18px; color: #d6d3d1; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  td:first-child { color: #fafaf9; font-weight: 600; }
+  .center { text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: Title -->
+<div class="slide">
+  <div class="eyebrow">AI Trading Agents Hackathon 2026</div>
+  <h1>Proof-of-Trust<br>Trading Agent</h1>
+  <p class="tagline">AI that can't break its own rules</p>
+  <p style="font-size: 18px; color: #78716c;">ERC-8004 on-chain identity &bull; 7 enforced risk gates &bull; EIP-712 signed intents &bull; Cryptographic audit trail</p>
+  <div class="footer">
+    <span>lablab.ai &times; Surge &times; Kraken</span>
+    <span>Amin Sarafraz &bull; @zixlancer</span>
+  </div>
+</div>
+
+<!-- SLIDE 2: Problem -->
+<div class="slide">
+  <div class="eyebrow">The Problem</div>
+  <h2>AI trading agents are <span class="warn">black boxes</span></h2>
+  <div class="grid3" style="margin-top: 30px;">
+    <div class="card">
+      <h3>No Identity</h3>
+      <p>Who is this agent? Who controls it? No way to verify.</p>
+    </div>
+    <div class="card">
+      <h3>No Audit Trail</h3>
+      <p>When something goes wrong, you can't prove what happened or why.</p>
+    </div>
+    <div class="card">
+      <h3>No Enforced Limits</h3>
+      <p>Risk controls exist in code the AI can override. Trust the operator, not the math.</p>
+    </div>
+  </div>
+  <p style="margin-top: 30px; font-size: 24px;">Users trust opaque code with their capital and <span class="warn">hope for the best</span>.</p>
+  <div class="footer"><span>Proof-of-Trust Trading Agent</span><span>2 / 10</span></div>
+</div>
+
+<!-- SLIDE 3: Solution -->
+<div class="slide">
+  <div class="eyebrow">Our Solution</div>
+  <h2>The <span class="accent">Trust Triangle</span></h2>
+  <p style="font-size: 24px; margin-bottom: 30px;">Every trade must satisfy all three — simultaneously.</p>
+  <div class="grid3">
+    <div class="card" style="border-color: rgba(13,148,136,0.3);">
+      <h3><span class="accent">1.</span> Identity</h3>
+      <p>ERC-8004 on-chain identity. Agent registered as ERC-721 NFT. Discoverable via Agent Card.</p>
+    </div>
+    <div class="card" style="border-color: rgba(13,148,136,0.3);">
+      <h3><span class="accent">2.</span> Constraints</h3>
+      <p>Risk Router contract enforces 7 gates. The AI proposes — the system decides. No bypass possible.</p>
+    </div>
+    <div class="card" style="border-color: rgba(13,148,136,0.3);">
+      <h3><span class="accent">3.</span> Auditability</h3>
+      <p>Every intent signed with EIP-712. Validation artifacts hashed on-chain. Cryptographic proof, not logging.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Proof-of-Trust Trading Agent</span><span>3 / 10</span></div>
+</div>
+
+<!-- SLIDE 4: Architecture -->
+<div class="slide">
+  <div class="eyebrow">Architecture</div>
+  <h2>Hexagonal Design — Ports & Adapters</h2>
+  <div class="arch">
+    <span class="highlight">ERC-8004 Identity Registry</span> (on-chain ERC-721)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+    <span class="highlight">AI Strategy Engine</span> (Momentum + Claude/ADK Hybrid)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+    <span class="highlight">Intent Builder + Signer</span> (EIP-712 typed data, secp256k1 ECDSA)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+    <span class="highlight">Risk Gates</span> (7 gates: drawdown, position, confidence, fee, regime, circuit breaker, ATR stop)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+    <span class="highlight">Execution</span> (Kraken CLI &mdash; paper or live)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+    <span class="highlight">Validation & Reputation</span> (artifact hash &rarr; on-chain reputation registry)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+    <span class="highlight">Dashboard</span> (SvelteKit) + HTTP API (/logs, /metrics, /agent-card.json)
+  </div>
+  <div class="footer"><span>Proof-of-Trust Trading Agent</span><span>4 / 10</span></div>
+</div>
+
+<!-- SLIDE 5: Tech Stack -->
+<div class="slide">
+  <div class="eyebrow">Tech Stack</div>
+  <h2>Production-Grade Infrastructure</h2>
+  <div class="grid2">
+    <div>
+      <table>
+        <tr><td>Agent Core</td><td>Rust (async tokio, hexagonal arch)</td></tr>
+        <tr><td>AI Engine</td><td>Anthropic ADK-Rust (Claude Sonnet)</td></tr>
+        <tr><td>Execution</td><td>Kraken CLI (paper + live)</td></tr>
+        <tr><td>Signing</td><td>EIP-712 ECDSA (secp256k1)</td></tr>
+        <tr><td>Contracts</td><td>3 Solidity (Identity, Reputation, Risk Router)</td></tr>
+        <tr><td>Dashboard</td><td>SvelteKit + Chart.js</td></tr>
+        <tr><td>Chain</td><td>Base Sepolia (EVM L2)</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="card stat" style="margin-bottom: 20px;">
+        <span class="num">70+</span>
+        <span class="label">Passing Tests (Rust + Solidity)</span>
+      </div>
+      <div class="card stat" style="margin-bottom: 20px;">
+        <span class="num">45+</span>
+        <span class="label">Rust Source Files</span>
+      </div>
+      <div class="card stat">
+        <span class="num">3</span>
+        <span class="label">Smart Contracts</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>Proof-of-Trust Trading Agent</span><span>5 / 10</span></div>
+</div>
+
+<!-- SLIDE 6: Risk Controls -->
+<div class="slide">
+  <div class="eyebrow">Core Innovation</div>
+  <h2>7 Risk Gates — <span class="accent">AI Cannot Bypass</span></h2>
+  <table>
+    <thead><tr><th>Gate</th><th>Default</th><th>Enforcement</th></tr></thead>
+    <tbody>
+      <tr><td>Max Drawdown Cap</td><td>5%</td><td>Hard stop — agent pauses if equity drops from peak</td></tr>
+      <tr><td>Position Limit</td><td>1 open</td><td>No pyramiding — one position at a time</td></tr>
+      <tr><td>Confidence Floor</td><td>60%</td><td>Reject low-conviction AI signals</td></tr>
+      <tr><td>Fee Filter</td><td>0.7% edge</td><td>Don't trade unless move covers round-trip fees</td></tr>
+      <tr><td>Regime Filter</td><td>Auto</td><td>Hold during market transitions</td></tr>
+      <tr><td>Circuit Breaker</td><td>3 losses / $5</td><td>Auto-pause after consecutive losses or daily limit</td></tr>
+      <tr><td>ATR Trailing Stop</td><td>1.5x ATR</td><td>Mechanical exit — no AI discretion</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top: 20px;"><span class="accent">20%+ of trades blocked</span> — proof that gates are active, not decorative.</p>
+  <div class="footer"><span>Proof-of-Trust Trading Agent</span><span>6 / 10</span></div>
+</div>
+
+<!-- SLIDE 7: Dashboard Demo -->
+<div class="slide">
+  <div class="eyebrow">Live Dashboard</div>
+  <h2>Real-Time Monitoring & Audit</h2>
+  <div class="grid2">
+    <div>
+      <ul>
+        <li>Price chart with Bollinger Bands (20,2)</li>
+        <li>Buy/Sell trade markers on chart</li>
+        <li>PnL tracking (realized + unrealized)</li>
+        <li>Drawdown monitoring with circuit breaker status</li>
+        <li>Full trade log with risk gate decisions</li>
+        <li>Metrics bar: ticks, executed, blocked, holds, errors</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card">
+        <h3>HTTP API Endpoints</h3>
+        <p style="font-family: monospace; font-size: 16px; color: #0d9488;">GET /metrics</p>
+        <p style="font-size: 16px;">Real-time counters</p>
+        <p style="font-family: monospace; font-size: 16px; color: #0d9488;">GET /logs</p>
+        <p style="font-size: 16px;">Full trade history with artifacts</p>
+        <p style="font-family: monospace; font-size: 16px; color: #0d9488;">GET /.well-known/agent-card.json</p>
+        <p style="font-size: 16px;">ERC-8004 discovery endpoint</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>Proof-of-Trust Trading Agent</span><span>7 / 10</span></div>
+</div>
+
+<!-- SLIDE 8: ERC-8004 -->
+<div class="slide">
+  <div class="eyebrow">On-Chain Trust Layer</div>
+  <h2>ERC-8004 — Full Implementation</h2>
+  <div class="grid2">
+    <div>
+      <div class="card" style="margin-bottom: 20px;">
+        <h3>On-Chain (Verifiable)</h3>
+        <ul>
+          <li>Agent identity (ERC-721 NFT)</li>
+          <li>Risk policy summary</li>
+          <li>Performance metrics (Sharpe, drawdown)</li>
+          <li>Validation artifact hashes</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom: 20px;">
+        <h3>Off-Chain (Performant)</h3>
+        <ul>
+          <li>Strategy logic (Rust core)</li>
+          <li>Real-time indicator computation</li>
+          <li>Trade execution (Kraken CLI)</li>
+          <li>Dashboard + HTTP API</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <p style="margin-top: 20px; font-size: 24px;">The agent works without the chain. The chain makes it <span class="accent">verifiable and discoverable</span>.</p>
+  <div class="footer"><span>Proof-of-Trust Trading Agent</span><span>8 / 10</span></div>
+</div>
+
+<!-- SLIDE 9: Business Value -->
+<div class="slide">
+  <div class="eyebrow">Why This Matters</div>
+  <h2>Trust > Returns</h2>
+  <p style="font-size: 24px; margin-bottom: 30px;">The winning AI trading agents won't be the ones with the best returns — they'll be the ones you can <span class="accent">verify and trust</span>.</p>
+  <div class="grid2">
+    <ul>
+      <li><strong>Regulatory-aligned</strong> — "constrained agent in a hard risk envelope" matches what regulators recommend</li>
+      <li><strong>Auditable</strong> — every decision has cryptographic proof</li>
+      <li><strong>Trustless</strong> — trust the math, not the operator</li>
+    </ul>
+    <ul>
+      <li><strong>Discoverable</strong> — Agent Card enables a marketplace of verified agents</li>
+      <li><strong>Extensible</strong> — hexagonal arch = swap venues, chains, strategies</li>
+      <li><strong>Production-ready</strong> — not a demo, a deployable system</li>
+    </ul>
+  </div>
+  <div class="footer"><span>Proof-of-Trust Trading Agent</span><span>9 / 10</span></div>
+</div>
+
+<!-- SLIDE 10: Team & Links -->
+<div class="slide" style="text-align: center;">
+  <div class="eyebrow">Thank You</div>
+  <h1 style="margin-bottom: 8px;">Proof-of-Trust Trading Agent</h1>
+  <p class="tagline">AI that can't break its own rules</p>
+  <div style="margin-top: 40px; display: inline-grid; grid-template-columns: 1fr 1fr; gap: 16px 60px; text-align: left;">
+    <p style="font-size: 20px;"><strong style="color: #0d9488;">GitHub</strong><br>github.com/zixelfreelance/erc8004-trading-agent</p>
+    <p style="font-size: 20px;"><strong style="color: #0d9488;">X / Twitter</strong><br>@zixlancer</p>
+    <p style="font-size: 20px;"><strong style="color: #0d9488;">LinkedIn</strong><br>linkedin.com/in/amin-sarafraz-abab883bb</p>
+    <p style="font-size: 20px;"><strong style="color: #0d9488;">YouTube</strong><br>@ZixelLLC</p>
+  </div>
+  <p style="margin-top: 50px; font-size: 18px; color: #57534e;">AI Trading Agents Hackathon &bull; lablab.ai &times; Surge &times; Kraken &bull; March 30 &ndash; April 12, 2026</p>
+  <div class="footer"><span>Built by Amin Sarafraz</span><span>10 / 10</span></div>
+</div>
+
+</body>
+</html>

@@ -148,22 +148,22 @@ pub struct McpTool {
 /// Curated list of safe market data tools (no trading, no auth).
 pub fn market_tool_names() -> Vec<&'static str> {
     vec![
-        "get_ticker",
-        "get_ohlc",
-        "get_order_book",
-        "get_recent_trades",
-        "get_recent_spreads",
+        "kraken_ticker",
+        "kraken_ohlc",
+        "kraken_orderbook",
+        "kraken_trades",
+        "kraken_spreads",
     ]
 }
 
 /// Paper trading tool names.
 pub fn paper_tool_names() -> Vec<&'static str> {
     vec![
-        "paper_buy",
-        "paper_sell",
-        "paper_get_balance",
-        "paper_get_positions",
-        "paper_get_open_orders",
-        "paper_get_trades",
+        "kraken_paper_buy",
+        "kraken_paper_sell",
+        "kraken_paper_balance",
+        "kraken_paper_orders",
+        "kraken_paper_history",
+        "kraken_paper_status",
     ]
 }

@@ -16,6 +16,17 @@ book-output/
 trades.log
 *.log
 
+# Foundry artifacts
+contracts/broadcast/
+contracts/cache/
+contracts/foundry.lock
+
+# Large media (hosted externally)
+docs/The_AI_Trader_You_Can_Trust.mp4
+
+# Ephemeral
+youtude-description.md
+
 # Private docs (local only — never push)
 docs/REGISTRATION.md
 docs/MANUAL-CHECKLIST.md
