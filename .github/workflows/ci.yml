@@ -9,13 +9,12 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
-defaults:
-  run:
-    working-directory: trading-agent
-
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: trading-agent
     steps:
       - uses: actions/checkout@v4
 
