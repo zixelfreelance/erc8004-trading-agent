@@ -89,10 +89,7 @@ impl Eip712Signer {
                 .and_then(|s| s.parse::<u64>().ok())
                 .unwrap_or(1),
         );
-        let wallet: Address = intent
-            .agent_wallet
-            .parse()
-            .unwrap_or(Address::zero());
+        let wallet: Address = intent.agent_wallet.parse().unwrap_or(Address::zero());
         let pair_hash = keccak256(intent.pair.as_bytes());
         let action: u8 = match intent.action.as_str() {
             "Buy" => 0,

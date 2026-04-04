@@ -42,7 +42,9 @@ where
     P: PerformancePort,
 {
     /// Run one tick. Returns the signed intent if a trade was executed (not blocked).
-    pub async fn run_once(&self) -> anyhow::Result<Option<crate::domain::signed_intent::SignedIntent>> {
+    pub async fn run_once(
+        &self,
+    ) -> anyhow::Result<Option<crate::domain::signed_intent::SignedIntent>> {
         self.metrics.record_tick();
 
         let data = self.market.get_market_data()?;
@@ -239,11 +241,12 @@ where
             .log_decision(&data, &final_decision, blocked, &signed_intent, &perf)?;
 
         // Return the signed intent if a trade was executed (for on-chain submission)
-        let executed_trade = if !blocked && matches!(final_decision.action, Action::Buy | Action::Sell) {
-            Some(signed_intent)
-        } else {
-            None
-        };
+        let executed_trade =
+            if !blocked && matches!(final_decision.action, Action::Buy | Action::Sell) {
+                Some(signed_intent)
+            } else {
+                None
+            };
         Ok(executed_trade)
     }
 }

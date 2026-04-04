@@ -3,10 +3,7 @@ use crate::ports::identity::IdentityPort;
 use async_trait::async_trait;
 use ethers::prelude::*;
 
-abigen!(
-    IdentityRegistry,
-    "abi/AgentIdentityRegistry.json"
-);
+abigen!(IdentityRegistry, "abi/AgentIdentityRegistry.json");
 
 pub struct ChainIdentityAdapter {
     client: Option<EthClient>,
@@ -95,10 +92,7 @@ impl IdentityPort for ChainIdentityAdapter {
         let Some(contract) = self.contract() else {
             return Ok(None);
         };
-        let uri: String = contract
-            .agent_uri(U256::from(agent_id))
-            .call()
-            .await?;
+        let uri: String = contract.agent_uri(U256::from(agent_id)).call().await?;
         if uri.is_empty() {
             Ok(None)
         } else {

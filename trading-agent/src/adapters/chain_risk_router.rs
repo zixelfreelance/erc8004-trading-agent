@@ -4,10 +4,7 @@ use crate::ports::risk_router::RiskRouterPort;
 use async_trait::async_trait;
 use ethers::prelude::*;
 
-abigen!(
-    RiskRouterContract,
-    "abi/RiskRouter.json"
-);
+abigen!(RiskRouterContract, "abi/RiskRouter.json");
 
 pub struct ChainRiskRouterAdapter {
     client: Option<EthClient>,

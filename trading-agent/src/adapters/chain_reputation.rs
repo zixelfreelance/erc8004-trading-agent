@@ -3,10 +3,7 @@ use crate::ports::reputation::{ReputationMetric, ReputationPort};
 use async_trait::async_trait;
 use ethers::prelude::*;
 
-abigen!(
-    ReputationRegistry,
-    "abi/AgentReputationRegistry.json"
-);
+abigen!(ReputationRegistry, "abi/AgentReputationRegistry.json");
 
 pub struct ChainReputationAdapter {
     client: Option<EthClient>,
@@ -36,7 +33,9 @@ impl ChainReputationAdapter {
         self.client.is_some() && self.registry_address.is_some()
     }
 
-    fn contract(&self) -> Option<ReputationRegistry<SignerMiddleware<Provider<Http>, LocalWallet>>> {
+    fn contract(
+        &self,
+    ) -> Option<ReputationRegistry<SignerMiddleware<Provider<Http>, LocalWallet>>> {
         let client = self.client.as_ref()?;
         let addr = self.registry_address?;
         Some(ReputationRegistry::new(addr, client.clone()))

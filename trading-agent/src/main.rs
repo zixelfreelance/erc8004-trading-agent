@@ -273,7 +273,11 @@ async fn main() -> anyhow::Result<()> {
     let signer: SignerDriver = if signing_key.starts_with("0x")
         || (signing_key.len() == 64 && signing_key.chars().all(|c| c.is_ascii_hexdigit()))
     {
-        SignerDriver::Eip712(Eip712Signer::new(&signing_key, chain_id, verifying_contract)?)
+        SignerDriver::Eip712(Eip712Signer::new(
+            &signing_key,
+            chain_id,
+            verifying_contract,
+        )?)
     } else {
         SignerDriver::Simple(SimpleSigner::new(signing_key))
     };
