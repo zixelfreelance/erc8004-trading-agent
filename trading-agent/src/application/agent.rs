@@ -110,10 +110,7 @@ where
                 decision = crate::domain::model::Decision {
                     action: Action::Hold,
                     confidence: decision.confidence,
-                    reasoning: format!(
-                        "regime: transition (unclear) — {}",
-                        decision.reasoning
-                    ),
+                    reasoning: format!("regime: transition (unclear) — {}", decision.reasoning),
                 };
             }
 
