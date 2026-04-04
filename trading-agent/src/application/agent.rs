@@ -225,8 +225,19 @@ where
 
             if !blocked && matches!(final_decision.action, Action::Buy | Action::Sell) {
                 let balance_after = self.performance.snapshot().balance;
+                let pnl = balance_after - balance_before;
                 pos.record_trade_result(balance_before, balance_after);
                 pos.last_trade_tick = current_tick;
+
+                // Record win/loss and return for Sharpe calculation
+                if pnl >= 0.0 {
+                    self.metrics.record_win();
+                } else {
+                    self.metrics.record_loss();
+                }
+                if balance_before > 0.0 {
+                    self.metrics.record_return(pnl / balance_before);
+                }
 
                 if pos.consecutive_losses >= self.risk_config.max_consecutive_losses
                     || pos.daily_loss >= self.risk_config.daily_loss_limit
@@ -236,9 +247,17 @@ where
             }
         }
 
+        // Update regime label in metrics
+        let regime_label = match regime {
+            MarketRegime::Trending => "trending",
+            MarketRegime::Ranging => "ranging",
+            MarketRegime::Transition => "transition",
+        };
+        self.metrics.set_regime(regime_label);
+
         let perf = self.performance.snapshot();
         self.validation
-            .log_decision(&data, &final_decision, blocked, &signed_intent, &perf)?;
+            .log_decision(&data, &final_decision, blocked, &signed_intent, &perf, regime_label)?;
 
         // Return the signed intent if a trade was executed (for on-chain submission)
         let executed_trade =

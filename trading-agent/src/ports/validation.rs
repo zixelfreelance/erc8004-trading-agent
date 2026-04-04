@@ -10,5 +10,6 @@ pub trait ValidationPort: Send + Sync {
         blocked: bool,
         signed_intent: &SignedIntent,
         performance: &Performance,
+        regime: &str,
     ) -> anyhow::Result<()>;
 }

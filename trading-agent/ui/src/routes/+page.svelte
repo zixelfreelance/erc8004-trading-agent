@@ -42,6 +42,11 @@
     trades_blocked: number;
     holds: number;
     errors: number;
+    wins: number;
+    losses: number;
+    win_rate: number;
+    sharpe_ratio: number;
+    regime: string;
   };
 
   let logs = $state<LogRow[]>([]);
@@ -290,6 +295,21 @@
         <span class="metric-label">Errors</span>
       </div>
     </section>
+
+    <section class="metrics-bar institutional">
+      <div class="metric sharpe">
+        <span class="metric-value">{metrics.sharpe_ratio.toFixed(2)}</span>
+        <span class="metric-label">Sharpe Ratio</span>
+      </div>
+      <div class="metric winrate">
+        <span class="metric-value">{(metrics.win_rate * 100).toFixed(1)}%</span>
+        <span class="metric-label">Win Rate ({metrics.wins}W / {metrics.losses}L)</span>
+      </div>
+      <div class="metric regime-card">
+        <span class="metric-value regime-badge {metrics.regime || 'transition'}">{(metrics.regime || 'transition').toUpperCase()}</span>
+        <span class="metric-label">Market Regime</span>
+      </div>
+    </section>
   {/if}
 
   {#if error}
@@ -344,12 +364,14 @@
           <tr>
             <th>Time</th>
             <th>Action</th>
+            <th>Regime</th>
             <th>Price</th>
             <th>Conf.</th>
             <th>Risk</th>
             <th>Balance</th>
             <th>PnL</th>
             <th>DD %</th>
+            <th>Chain</th>
           </tr>
         </thead>
         <tbody>
@@ -357,14 +379,16 @@
             <tr>
               <td class="mono">{shortTs(row.timestamp)}</td>
               <td><span class="pill {row.action.toLowerCase()}">{row.action}</span></td>
+              <td>{#if row.regime}<span class="regime-pill {row.regime}">{row.regime}</span>{:else}—{/if}</td>
               <td>{row.price.toLocaleString()}</td>
               <td>{(row.confidence * 100).toFixed(0)}%</td>
               <td class={row.blocked_by_risk ? 'risk-blocked' : 'risk-ok'}>
-                {row.blocked_by_risk ? row.reasoning.slice(0, 30) + '...' : '—'}
+                {row.blocked_by_risk ? (row.blocked_reason || row.reasoning || '').slice(0, 30) + '...' : '—'}
               </td>
               <td>{row.balance.toFixed(2)}</td>
               <td>{row.pnl.toFixed(2)}</td>
               <td>{(row.drawdown * 100).toFixed(2)}</td>
+              <td>{#if row.tx_hash}<a href="https://sepolia.etherscan.io/tx/{row.tx_hash}" target="_blank" class="tx-link" title={row.tx_hash}>{row.tx_hash.slice(0, 10)}...</a>{:else}<span class="muted">—</span>{/if}</td>
             </tr>
           {/each}
         </tbody>

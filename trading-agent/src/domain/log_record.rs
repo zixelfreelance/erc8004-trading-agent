@@ -12,4 +12,10 @@ pub struct TradeLogRecord {
     pub balance: f64,
     pub peak_balance: f64,
     pub blocked_by_risk: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub regime: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tx_hash: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blocked_reason: Option<String>,
 }

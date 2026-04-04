@@ -48,11 +48,18 @@ impl ValidationPort for ArtifactValidation {
         blocked: bool,
         signed_intent: &SignedIntent,
         performance: &Performance,
+        regime: &str,
     ) -> anyhow::Result<()> {
         let action_str = match decision.action {
             crate::domain::model::Action::Buy => "Buy",
             crate::domain::model::Action::Sell => "Sell",
             crate::domain::model::Action::Hold => "Hold",
+        };
+
+        let blocked_reason = if blocked {
+            Some(decision.reasoning.clone())
+        } else {
+            None
         };
 
         let record = TradeLogRecord {
@@ -66,6 +73,9 @@ impl ValidationPort for ArtifactValidation {
             balance: performance.balance,
             peak_balance: performance.peak_balance,
             blocked_by_risk: blocked,
+            regime: Some(regime.to_string()),
+            tx_hash: None, // Set by main loop after chain submission
+            blocked_reason: blocked_reason.clone(),
         };
 
         {
@@ -79,6 +89,7 @@ impl ValidationPort for ArtifactValidation {
             "strategy": self.strategy_display_name,
             "agent": signed_intent.intent.agent_id,
             "blocked_by_risk": blocked,
+            "regime": regime,
             "market": {
                 "pair": data.pair,
                 "price": data.price,
@@ -88,7 +99,8 @@ impl ValidationPort for ArtifactValidation {
             "intent": signed_intent.intent,
             "signature": signed_intent.signature,
             "risk": {
-                "blocked": blocked
+                "blocked": blocked,
+                "reason": blocked_reason,
             },
             "performance": {
                 "pnl": performance.pnl,
