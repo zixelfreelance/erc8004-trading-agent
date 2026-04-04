@@ -330,9 +330,28 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or(50); // pin to IPFS every N ticks
 
     loop {
-        if let Err(e) = agent.run_once().await {
-            agent.metrics.record_error();
-            eprintln!("tick error: {e:#}");
+        match agent.run_once().await {
+            Ok(Some(signed_intent)) => {
+                // Trade was executed — submit intent to RiskRouter
+                if let Some(ref router) = risk_router_adapter {
+                    if router.is_configured() {
+                        use crate::ports::risk_router::RiskRouterPort;
+                        match router
+                            .submit_intent(&signed_intent.intent, &signed_intent.signature)
+                            .await
+                        {
+                            Ok(Some(tx)) => eprintln!("chain: intent submitted (tx={tx})"),
+                            Ok(None) => {}
+                            Err(e) => eprintln!("chain: intent submission failed: {e:#}"),
+                        }
+                    }
+                }
+            }
+            Ok(None) => {} // Hold or blocked — no chain submission
+            Err(e) => {
+                agent.metrics.record_error();
+                eprintln!("tick error: {e:#}");
+            }
         }
 
         // Log WebSocket price if available (supplements OHLC)

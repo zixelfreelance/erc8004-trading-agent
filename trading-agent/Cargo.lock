@@ -4860,6 +4860,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "ethers",
+ "hex",
  "reqwest 0.12.28",
  "schemars 0.8.22",
  "serde",
