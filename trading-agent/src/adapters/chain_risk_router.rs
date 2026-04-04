@@ -73,7 +73,7 @@ impl RiskRouterPort for ChainRiskRouterAdapter {
             agent_wallet: wallet,
             pair: intent.pair.clone(),
             action,
-            amount_usd_scaled: intent.amount_usd_scaled.into(),
+            amount_usd_scaled: intent.amount_usd_scaled,
             max_slippage_bps: intent.max_slippage_bps,
             nonce: intent.nonce,
             deadline: intent.deadline,

@@ -393,7 +393,7 @@ async fn main() -> anyhow::Result<()> {
                 if let Some(ref pinner) = ipfs_pinner {
                     let artifact = {
                         let entries = agent.validation.entries.lock().expect("log mutex");
-                        entries.last().map(|r| serde_json::to_value(r).ok()).flatten()
+                        entries.last().and_then(|r| serde_json::to_value(r).ok())
                     };
                     if let Some(artifact) = artifact {
                         match pinner.pin_artifact(&artifact).await {
