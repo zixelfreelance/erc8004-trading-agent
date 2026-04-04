@@ -168,14 +168,9 @@ async fn main() -> anyhow::Result<()> {
     let reputation_registry = std::env::var("REPUTATION_REGISTRY").unwrap_or_default();
     let chain_rpc_url = std::env::var("CHAIN_RPC_URL").unwrap_or_default();
 
-    let identity_adapter = ChainIdentityAdapter::new(
-        identity_registry.clone(),
-        chain_rpc_url.clone(),
-    );
-    let reputation_adapter = ChainReputationAdapter::new(
-        reputation_registry,
-        chain_rpc_url,
-    );
+    let identity_adapter =
+        ChainIdentityAdapter::new(identity_registry.clone(), chain_rpc_url.clone());
+    let reputation_adapter = ChainReputationAdapter::new(reputation_registry, chain_rpc_url);
 
     // Register agent identity on-chain if configured
     if identity_adapter.is_configured() {
@@ -190,7 +185,11 @@ async fn main() -> anyhow::Result<()> {
         ExecutionMode::Paper => "paper",
         ExecutionMode::Live => "LIVE",
     };
-    let chain_status = if identity_adapter.is_configured() { "configured" } else { "not configured" };
+    let chain_status = if identity_adapter.is_configured() {
+        "configured"
+    } else {
+        "not configured"
+    };
     eprintln!("mode: {mode_label} | pair: {pair} | volume: {volume} | chain: {chain_status}");
     eprintln!("audit: GET http://{addr}/logs  GET http://{addr}/metrics");
 
@@ -271,7 +270,9 @@ async fn main() -> anyhow::Result<()> {
 
     let ipfs_pinner = IpfsPinner::from_env();
     if ipfs_pinner.is_some() {
-        eprintln!("ipfs: Pinata configured — artifacts will be pinned every {reputation_interval} ticks");
+        eprintln!(
+            "ipfs: Pinata configured — artifacts will be pinned every {reputation_interval} ticks"
+        );
     }
 
     let ipfs_interval: u64 = std::env::var("AGENT_IPFS_INTERVAL")
@@ -291,8 +292,12 @@ async fn main() -> anyhow::Result<()> {
                 eprintln!(
                     "ws: price={:.2} bid={} ask={}",
                     tick.price,
-                    tick.bid.map(|b| format!("{b:.2}")).unwrap_or_else(|| "?".into()),
-                    tick.ask.map(|a| format!("{a:.2}")).unwrap_or_else(|| "?".into()),
+                    tick.bid
+                        .map(|b| format!("{b:.2}"))
+                        .unwrap_or_else(|| "?".into()),
+                    tick.ask
+                        .map(|a| format!("{a:.2}"))
+                        .unwrap_or_else(|| "?".into()),
                 );
             }
         }

@@ -1,10 +1,10 @@
-use async_trait::async_trait;
 use crate::ports::identity::IdentityPort;
+use async_trait::async_trait;
 
 pub struct ChainIdentityAdapter {
-    pub registry_address: String,  // contract address (from env)
-    pub rpc_url: String,           // Sepolia RPC URL (from env)
-    pub agent_uri: String,         // cached after registration
+    pub registry_address: String, // contract address (from env)
+    pub rpc_url: String,          // Sepolia RPC URL (from env)
+    pub agent_uri: String,        // cached after registration
 }
 
 impl ChainIdentityAdapter {
@@ -37,7 +37,10 @@ impl IdentityPort for ChainIdentityAdapter {
             eprintln!("chain: identity registry not configured, skipping registration");
             return Ok(0);
         }
-        eprintln!("chain: register_agent(uri={agent_uri}) on {}", self.registry_address);
+        eprintln!(
+            "chain: register_agent(uri={agent_uri}) on {}",
+            self.registry_address
+        );
         // TODO: Replace with real ethers-rs contract call
         // let contract = AgentIdentityRegistry::new(addr, provider);
         // let tx = contract.register_with_uri(agent_uri).send().await?;
@@ -45,19 +48,25 @@ impl IdentityPort for ChainIdentityAdapter {
     }
 
     async fn set_agent_wallet(&self, agent_id: u64, deadline: u64) -> anyhow::Result<()> {
-        if !self.is_configured() { return Ok(()); }
+        if !self.is_configured() {
+            return Ok(());
+        }
         eprintln!("chain: set_agent_wallet(id={agent_id}, deadline={deadline})");
         Ok(())
     }
 
     async fn get_agent_wallet(&self, agent_id: u64) -> anyhow::Result<Option<String>> {
-        if !self.is_configured() { return Ok(None); }
+        if !self.is_configured() {
+            return Ok(None);
+        }
         eprintln!("chain: get_agent_wallet(id={agent_id})");
         Ok(None)
     }
 
     async fn get_agent_uri(&self, agent_id: u64) -> anyhow::Result<Option<String>> {
-        if !self.is_configured() { return Ok(None); }
+        if !self.is_configured() {
+            return Ok(None);
+        }
         eprintln!("chain: get_agent_uri(id={agent_id})");
         Ok(None)
     }

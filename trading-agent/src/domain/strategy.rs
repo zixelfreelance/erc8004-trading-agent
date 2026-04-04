@@ -2,8 +2,7 @@ use super::indicators;
 use super::model::{Action, Decision, MarketData};
 use super::regime::MarketRegime;
 
-pub const STRATEGY_DISPLAY_NAME: &str =
-    "Regime-Aware Dual Strategy (Momentum + Mean-Reversion)";
+pub const STRATEGY_DISPLAY_NAME: &str = "Regime-Aware Dual Strategy (Momentum + Mean-Reversion)";
 
 #[derive(Debug, Clone)]
 pub struct MarketSnapshot {
@@ -187,11 +186,7 @@ fn compute_volatility(prices: &[f64]) -> f64 {
     }
     let mean = prices.iter().sum::<f64>() / prices.len() as f64;
 
-    let variance = prices
-        .iter()
-        .map(|p| (p - mean).powi(2))
-        .sum::<f64>()
-        / prices.len() as f64;
+    let variance = prices.iter().map(|p| (p - mean).powi(2)).sum::<f64>() / prices.len() as f64;
 
     variance.sqrt()
 }

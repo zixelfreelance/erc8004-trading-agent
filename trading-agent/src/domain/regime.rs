@@ -191,7 +191,7 @@ mod tests {
         // Feed high ADX + some bandwidth
         assert_eq!(det.update(25.0, 0.05), MarketRegime::Transition); // bar 1
         assert_eq!(det.update(26.0, 0.05), MarketRegime::Transition); // bar 2
-        assert_eq!(det.update(27.0, 0.05), MarketRegime::Trending);   // bar 3 → switch
+        assert_eq!(det.update(27.0, 0.05), MarketRegime::Trending); // bar 3 → switch
     }
 
     #[test]

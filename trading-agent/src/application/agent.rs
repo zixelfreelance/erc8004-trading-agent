@@ -110,7 +110,10 @@ where
                         decision = crate::domain::model::Decision {
                             action: Action::Hold,
                             confidence: decision.confidence,
-                            reasoning: format!("regime: transition (unclear) — {}", decision.reasoning),
+                            reasoning: format!(
+                                "regime: transition (unclear) — {}",
+                                decision.reasoning
+                            ),
                         };
                     }
                     _ => {} // Trending and Ranging both allow trades (for now)
@@ -123,8 +126,13 @@ where
         let perf_snapshot = self.performance.snapshot();
         let current_tick = self.metrics.snapshot().ticks;
         let position_guard = self.position.lock().expect("position mutex poisoned");
-        let (final_decision, blocked) =
-            risk::apply_risk_with_tick(decision, &position_guard, &perf_snapshot, &self.risk_config, current_tick);
+        let (final_decision, blocked) = risk::apply_risk_with_tick(
+            decision,
+            &position_guard,
+            &perf_snapshot,
+            &self.risk_config,
+            current_tick,
+        );
         drop(position_guard);
 
         if blocked {
@@ -138,9 +146,9 @@ where
 
         // Volatility-scaled position sizing
         let tick_amount = if matches!(final_decision.action, Action::Buy | Action::Sell) {
-            if let Some(atr_val) = indicators::atr(
-                &data.ohlc_highs, &data.ohlc_lows, &data.ohlc_closes, 14,
-            ) {
+            if let Some(atr_val) =
+                indicators::atr(&data.ohlc_highs, &data.ohlc_lows, &data.ohlc_closes, 14)
+            {
                 risk::compute_position_size(
                     self.intent_amount,
                     perf_snapshot.balance,
@@ -156,12 +164,7 @@ where
             self.intent_amount
         };
 
-        let intent = build_intent(
-            &final_decision,
-            data.price,
-            &self.agent_id,
-            tick_amount,
-        );
+        let intent = build_intent(&final_decision, data.price, &self.agent_id, tick_amount);
         let signed_intent = self.signer.sign(intent);
 
         let balance_before = self.performance.snapshot().balance;
@@ -177,9 +180,9 @@ where
                 Action::Buy => {
                     pos.open_long = true;
                     // Set ATR-based stop for new position
-                    if let Some(atr_val) = indicators::atr(
-                        &data.ohlc_highs, &data.ohlc_lows, &data.ohlc_closes, 14,
-                    ) {
+                    if let Some(atr_val) =
+                        indicators::atr(&data.ohlc_highs, &data.ohlc_lows, &data.ohlc_closes, 14)
+                    {
                         let stop = data.price - atr_val * self.atr_stop_multiplier;
                         *self.atr_stop_price.lock().expect("atr mutex poisoned") = Some(stop);
                         eprintln!(
@@ -196,10 +199,14 @@ where
                     // Trailing stop: update if price moved up
                     if pos.open_long {
                         if let Some(atr_val) = indicators::atr(
-                            &data.ohlc_highs, &data.ohlc_lows, &data.ohlc_closes, 14,
+                            &data.ohlc_highs,
+                            &data.ohlc_lows,
+                            &data.ohlc_closes,
+                            14,
                         ) {
                             let new_stop = data.price - atr_val * self.atr_stop_multiplier;
-                            let mut stop_guard = self.atr_stop_price.lock().expect("atr mutex poisoned");
+                            let mut stop_guard =
+                                self.atr_stop_price.lock().expect("atr mutex poisoned");
                             if let Some(current_stop) = *stop_guard {
                                 if new_stop > current_stop {
                                     *stop_guard = Some(new_stop);
@@ -292,8 +299,14 @@ mod tests {
         decision: D,
         balance: f64,
         log_file: &str,
-    ) -> TradingAgent<MockMarket, D, MockExecution, ArtifactValidation, SimpleSigner, PerformanceTracker>
-    {
+    ) -> TradingAgent<
+        MockMarket,
+        D,
+        MockExecution,
+        ArtifactValidation,
+        SimpleSigner,
+        PerformanceTracker,
+    > {
         let log_entries: SharedLogEntries = Arc::new(std::sync::Mutex::new(Vec::new()));
         TradingAgent {
             market: MockMarket::demo_sequence(),
@@ -314,7 +327,11 @@ mod tests {
     }
 
     fn tmp_log(name: &str) -> String {
-        format!("/tmp/trading-agent-test-{}-{}.log", name, std::process::id())
+        format!(
+            "/tmp/trading-agent-test-{}-{}.log",
+            name,
+            std::process::id()
+        )
     }
 
     #[tokio::test]
@@ -382,7 +399,10 @@ mod tests {
         let m = agent.metrics.snapshot();
         // Low confidence buy gets caught by either regime filter (→ hold) or risk gate (→ blocked)
         // Either way, it should NOT execute
-        assert_eq!(m.trades_executed, 0, "Low confidence buy should not execute");
+        assert_eq!(
+            m.trades_executed, 0,
+            "Low confidence buy should not execute"
+        );
         let _ = std::fs::remove_file(&log);
     }
 }

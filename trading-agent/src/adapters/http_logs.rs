@@ -29,7 +29,11 @@ async fn get_decision_schema() -> Json<serde_json::Value> {
     Json(serde_json::to_value(schema).unwrap_or_else(|_| serde_json::json!({})))
 }
 
-async fn get_agent_card() -> (axum::http::StatusCode, [(axum::http::header::HeaderName, &'static str); 1], &'static str) {
+async fn get_agent_card() -> (
+    axum::http::StatusCode,
+    [(axum::http::header::HeaderName, &'static str); 1],
+    &'static str,
+) {
     (
         axum::http::StatusCode::OK,
         [(axum::http::header::CONTENT_TYPE, "application/json")],

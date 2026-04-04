@@ -19,7 +19,10 @@ impl PerformanceTracker {
 
 impl PerformancePort for PerformanceTracker {
     fn snapshot(&self) -> Performance {
-        self.inner.lock().expect("performance mutex poisoned").clone()
+        self.inner
+            .lock()
+            .expect("performance mutex poisoned")
+            .clone()
     }
 
     fn record_balance(&self, new_balance: f64) {

@@ -26,7 +26,8 @@ mod tests {
 
     #[test]
     fn parses_minimal_object() {
-        let d = parse_decision_json(r#"{"action":"Buy","confidence":0.9,"reasoning":"ok"}"#).unwrap();
+        let d =
+            parse_decision_json(r#"{"action":"Buy","confidence":0.9,"reasoning":"ok"}"#).unwrap();
         assert_eq!(d.action, Action::Buy);
         assert!((d.confidence - 0.9).abs() < f64::EPSILON);
         assert_eq!(d.reasoning, "ok");
@@ -41,9 +42,8 @@ mod tests {
 
     #[test]
     fn rejects_invalid_action() {
-        assert!(parse_decision_json(
-            r#"{"action":"Long","confidence":1.0,"reasoning":"x"}"#
-        )
-        .is_err());
+        assert!(
+            parse_decision_json(r#"{"action":"Long","confidence":1.0,"reasoning":"x"}"#).is_err()
+        );
     }
 }

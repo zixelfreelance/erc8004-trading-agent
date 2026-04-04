@@ -98,7 +98,9 @@ impl MockMarket {
 
 impl MarketPort for MockMarket {
     fn get_market_data(&self) -> anyhow::Result<MarketData> {
-        let idx = self.index.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let idx = self
+            .index
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         if idx >= self.ticks.len() {
             let wrapped = idx % self.ticks.len();
             Ok(self.ticks[wrapped].clone())

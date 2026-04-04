@@ -10,11 +10,13 @@ pub mod http_logs;
 #[allow(dead_code)]
 pub mod hybrid_decision;
 #[allow(dead_code)]
+pub mod ipfs_pinner;
+#[allow(dead_code)]
 pub mod kraken_book;
 pub mod kraken_execution;
+pub mod kraken_market;
 #[allow(dead_code)]
 pub mod kraken_mcp;
-pub mod kraken_market;
 #[allow(dead_code)]
 pub mod kraken_ws;
 #[allow(dead_code)]
@@ -22,6 +24,4 @@ pub mod mock_market;
 pub mod momentum_decision;
 pub mod performance_tracker;
 pub mod signer;
-#[allow(dead_code)]
-pub mod ipfs_pinner;
 pub mod validation;

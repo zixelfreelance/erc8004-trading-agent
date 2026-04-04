@@ -1,5 +1,5 @@
-use async_trait::async_trait;
 use crate::ports::reputation::{ReputationMetric, ReputationPort};
+use async_trait::async_trait;
 
 pub struct ChainReputationAdapter {
     pub registry_address: String,
@@ -8,7 +8,10 @@ pub struct ChainReputationAdapter {
 
 impl ChainReputationAdapter {
     pub fn new(registry_address: String, rpc_url: String) -> Self {
-        Self { registry_address, rpc_url }
+        Self {
+            registry_address,
+            rpc_url,
+        }
     }
 
     pub fn noop() -> Self {
@@ -51,7 +54,9 @@ impl ReputationPort for ChainReputationAdapter {
         tag1: &str,
         tag2: &str,
     ) -> anyhow::Result<Option<(u64, i128, u8)>> {
-        if !self.is_configured() { return Ok(None); }
+        if !self.is_configured() {
+            return Ok(None);
+        }
         eprintln!("chain: get_reputation(agent={agent_id}, {tag1}/{tag2})");
         Ok(None)
     }

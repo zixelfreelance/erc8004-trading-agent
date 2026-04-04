@@ -13,11 +13,17 @@ impl IpfsPinner {
         if api_key.is_empty() || api_secret.is_empty() {
             return None;
         }
-        Some(Self { api_key, api_secret })
+        Some(Self {
+            api_key,
+            api_secret,
+        })
     }
 
     pub fn new(api_key: String, api_secret: String) -> Self {
-        Self { api_key, api_secret }
+        Self {
+            api_key,
+            api_secret,
+        }
     }
 
     /// Pin a JSON value to IPFS via Pinata. Returns the IPFS CID (hash).

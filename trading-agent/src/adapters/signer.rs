@@ -21,16 +21,12 @@ impl SimpleSigner {
 
 impl SignerPort for SimpleSigner {
     fn sign(&self, intent: TradeIntent) -> SignedIntent {
-        let payload =
-            serde_json::to_string(&intent).expect("TradeIntent serializes to JSON");
+        let payload = serde_json::to_string(&intent).expect("TradeIntent serializes to JSON");
         let mut hasher = Sha256::new();
         hasher.update(payload.as_bytes());
         hasher.update(self.private_key.as_bytes());
         let signature = format!("{:x}", hasher.finalize());
-        SignedIntent {
-            intent,
-            signature,
-        }
+        SignedIntent { intent, signature }
     }
 }
 
@@ -40,14 +36,15 @@ pub struct Eip712Signer {
 
 impl Eip712Signer {
     pub fn new(private_key_hex: &str, chain_id: u64) -> anyhow::Result<Self> {
-        let clean = private_key_hex.strip_prefix("0x").unwrap_or(private_key_hex);
+        let clean = private_key_hex
+            .strip_prefix("0x")
+            .unwrap_or(private_key_hex);
         let wallet: LocalWallet = clean.parse::<LocalWallet>()?.with_chain_id(chain_id);
         Ok(Self { wallet })
     }
 
     fn domain_separator(&self) -> H256 {
-        let type_hash =
-            keccak256("EIP712Domain(string name,string version,uint256 chainId)");
+        let type_hash = keccak256("EIP712Domain(string name,string version,uint256 chainId)");
         let name_hash = keccak256("TrustAgent");
         let version_hash = keccak256("1");
         let chain_id = U256::from(self.wallet.chain_id());

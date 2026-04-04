@@ -30,6 +30,10 @@ impl DecisionPort for MomentumVolatilityDecision {
             &data.ohlc_closes,
             &regime::RegimeConfig::default(),
         );
-        Ok(compute_regime_aware_decision(data, &self.config, detected_regime))
+        Ok(compute_regime_aware_decision(
+            data,
+            &self.config,
+            detected_regime,
+        ))
     }
 }

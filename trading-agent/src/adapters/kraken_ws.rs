@@ -98,7 +98,12 @@ impl KrakenWsStream {
         let ask = Self::extract_f64(&v, &["a", "ask"]);
         let volume = Self::extract_f64(&v, &["v", "volume"]);
 
-        Ok(WsTick { price, bid, ask, volume })
+        Ok(WsTick {
+            price,
+            bid,
+            ask,
+            volume,
+        })
     }
 
     fn extract_f64(v: &Value, keys: &[&str]) -> Option<f64> {

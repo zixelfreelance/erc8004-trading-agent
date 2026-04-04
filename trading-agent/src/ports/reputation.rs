@@ -3,10 +3,10 @@ use async_trait::async_trait;
 /// Metric to post as feedback
 #[derive(Debug, Clone)]
 pub struct ReputationMetric {
-    pub tag1: String,        // e.g. "performance"
-    pub tag2: String,        // e.g. "sharpe"
-    pub value: i128,         // encoded value (e.g. 187 for 1.87)
-    pub decimals: u8,        // e.g. 2
+    pub tag1: String, // e.g. "performance"
+    pub tag2: String, // e.g. "sharpe"
+    pub value: i128,  // encoded value (e.g. 187 for 1.87)
+    pub decimals: u8, // e.g. 2
 }
 
 #[async_trait]

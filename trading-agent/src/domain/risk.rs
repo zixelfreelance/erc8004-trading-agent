@@ -143,8 +143,7 @@ pub fn apply_risk_with_tick(
         );
     }
 
-    if position.consecutive_losses >= cfg.max_consecutive_losses
-        && decision.action != Action::Hold
+    if position.consecutive_losses >= cfg.max_consecutive_losses && decision.action != Action::Hold
     {
         return (
             Decision {
@@ -208,10 +207,7 @@ pub fn apply_risk_with_tick(
                 Decision {
                     action: Action::Hold,
                     confidence: decision.confidence,
-                    reasoning: format!(
-                        "risk: no open long to close — {}",
-                        decision.reasoning
-                    ),
+                    reasoning: format!("risk: no open long to close — {}", decision.reasoning),
                 },
                 true,
             );

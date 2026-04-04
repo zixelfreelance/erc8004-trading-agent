@@ -43,10 +43,11 @@ impl KrakenMarket {
     }
 
     fn parse_field(ticker: &Value, key: &str, index: usize) -> Option<f64> {
-        ticker
-            .get(key)?
-            .get(index)
-            .and_then(|v| v.as_str().and_then(|s| s.parse().ok()).or_else(|| v.as_f64()))
+        ticker.get(key)?.get(index).and_then(|v| {
+            v.as_str()
+                .and_then(|s| s.parse().ok())
+                .or_else(|| v.as_f64())
+        })
     }
 
     fn parse_ticker_json(stdout: &[u8]) -> anyhow::Result<TickerData> {
@@ -54,9 +55,7 @@ impl KrakenMarket {
         if let Some(err) = root.get("error").and_then(|e| e.as_str()) {
             anyhow::bail!(
                 "kraken cli: {err} — {}",
-                root.get("message")
-                    .and_then(|m| m.as_str())
-                    .unwrap_or("")
+                root.get("message").and_then(|m| m.as_str()).unwrap_or("")
             );
         }
         let obj = root
@@ -113,9 +112,7 @@ impl KrakenMarket {
         if let Some(err) = root.get("error").and_then(|e| e.as_str()) {
             anyhow::bail!(
                 "kraken ohlc: {err} — {}",
-                root.get("message")
-                    .and_then(|m| m.as_str())
-                    .unwrap_or("")
+                root.get("message").and_then(|m| m.as_str()).unwrap_or("")
             );
         }
         let obj = root

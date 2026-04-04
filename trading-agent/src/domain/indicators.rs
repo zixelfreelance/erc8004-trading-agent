@@ -326,7 +326,9 @@ mod tests {
 
     #[test]
     fn test_bollinger_bands_valid() {
-        let closes: Vec<f64> = (0..30).map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0).collect();
+        let closes: Vec<f64> = (0..30)
+            .map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0)
+            .collect();
         let bb = bollinger(&closes, 20, 2.0).unwrap();
         assert!(bb.upper > bb.middle, "Upper band should be above middle");
         assert!(bb.middle > bb.lower, "Middle should be above lower band");

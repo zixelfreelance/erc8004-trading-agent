@@ -1,14 +1,14 @@
-use std::process::Command;
 use serde_json::Value;
+use std::process::Command;
 
 #[derive(Debug, Clone)]
 pub struct BookDepth {
     pub best_bid: f64,
     pub best_ask: f64,
     pub spread: f64,
-    pub bid_depth: f64,     // total volume on bid side
-    pub ask_depth: f64,     // total volume on ask side
-    pub imbalance: f64,     // (bid_depth - ask_depth) / (bid_depth + ask_depth), range -1 to 1
+    pub bid_depth: f64, // total volume on bid side
+    pub ask_depth: f64, // total volume on ask side
+    pub imbalance: f64, // (bid_depth - ask_depth) / (bid_depth + ask_depth), range -1 to 1
 }
 
 /// Fetch order book depth from Kraken CLI.
@@ -18,7 +18,10 @@ pub fn get_book_depth(pair: &str, depth: usize) -> anyhow::Result<BookDepth> {
         .output()?;
 
     if !output.status.success() {
-        anyhow::bail!("kraken book failed: {}", String::from_utf8_lossy(&output.stderr));
+        anyhow::bail!(
+            "kraken book failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
 
     parse_book_depth(&output.stdout)
@@ -28,17 +31,21 @@ fn parse_book_depth(stdout: &[u8]) -> anyhow::Result<BookDepth> {
     let root: Value = serde_json::from_slice(stdout)?;
 
     // Find the pair object containing bids/asks
-    let obj = root.as_object()
+    let obj = root
+        .as_object()
         .ok_or_else(|| anyhow::anyhow!("book: expected object"))?;
 
-    let pair_data = obj.values()
+    let pair_data = obj
+        .values()
         .find(|v| v.get("bids").is_some() || v.get("asks").is_some())
         .ok_or_else(|| anyhow::anyhow!("book: no bid/ask data"))?;
 
-    let bids = pair_data.get("bids")
+    let bids = pair_data
+        .get("bids")
         .and_then(|v| v.as_array())
         .ok_or_else(|| anyhow::anyhow!("book: no bids array"))?;
-    let asks = pair_data.get("asks")
+    let asks = pair_data
+        .get("asks")
         .and_then(|v| v.as_array())
         .ok_or_else(|| anyhow::anyhow!("book: no asks array"))?;
 
@@ -69,7 +76,8 @@ fn parse_level_price(level: Option<&Value>) -> anyhow::Result<f64> {
     let arr = level
         .and_then(|v| v.as_array())
         .ok_or_else(|| anyhow::anyhow!("book: empty level"))?;
-    let price_str = arr.first()
+    let price_str = arr
+        .first()
         .and_then(|v| v.as_str())
         .ok_or_else(|| anyhow::anyhow!("book: no price"))?;
     Ok(price_str.parse()?)
