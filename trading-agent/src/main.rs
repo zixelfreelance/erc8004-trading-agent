@@ -375,9 +375,7 @@ async fn main() -> anyhow::Result<()> {
                             Ok(Some(tx)) => {
                                 eprintln!("chain: intent submitted (tx={tx})");
                                 // Backfill tx_hash on the last log entry
-                                if let Ok(mut entries) =
-                                    agent.validation.entries.lock()
-                                {
+                                if let Ok(mut entries) = agent.validation.entries.lock() {
                                     if let Some(last) = entries.last_mut() {
                                         last.tx_hash = Some(tx);
                                     }
@@ -467,7 +465,10 @@ async fn main() -> anyhow::Result<()> {
                 .and_then(|e| e.last().and_then(|r| r.cid.clone()))
                 .map(|cid| format!("ipfs://{cid}"))
                 .unwrap_or_default();
-            match reputation_adapter.post_feedback(0, &metric, &feedback_uri).await {
+            match reputation_adapter
+                .post_feedback(0, &metric, &feedback_uri)
+                .await
+            {
                 Ok(tx) => eprintln!("chain: reputation posted (tx={tx}, pnl={:.2})", perf.pnl),
                 Err(e) => eprintln!("chain: reputation post failed: {e:#}"),
             }
