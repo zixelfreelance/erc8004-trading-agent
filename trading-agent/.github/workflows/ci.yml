@@ -14,8 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Install Foundry submodules
+        run: |
+          git submodule deinit --all -f 2>/dev/null || true
+          rm -rf contracts/lib/forge-std contracts/lib/openzeppelin-contracts
+          git clone --depth 1 https://github.com/foundry-rs/forge-std.git contracts/lib/forge-std
+          git clone --depth 1 --recurse-submodules https://github.com/OpenZeppelin/openzeppelin-contracts.git contracts/lib/openzeppelin-contracts
 
       - name: Clone adk-rust dependency
         run: git clone --depth 1 https://github.com/zixelfreelance/adk-rust.git ../adk-rust
