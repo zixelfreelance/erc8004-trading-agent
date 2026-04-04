@@ -103,21 +103,18 @@ where
                 }
             }
 
-            // --- Regime filter: block momentum in ranging, reversion in trending ---
-            if matches!(decision.action, Action::Buy | Action::Sell) {
-                match regime {
-                    MarketRegime::Transition => {
-                        decision = crate::domain::model::Decision {
-                            action: Action::Hold,
-                            confidence: decision.confidence,
-                            reasoning: format!(
-                                "regime: transition (unclear) — {}",
-                                decision.reasoning
-                            ),
-                        };
-                    }
-                    _ => {} // Trending and Ranging both allow trades (for now)
-                }
+            // --- Regime filter: block trades during unclear market regime ---
+            if matches!(decision.action, Action::Buy | Action::Sell)
+                && regime == MarketRegime::Transition
+            {
+                decision = crate::domain::model::Decision {
+                    action: Action::Hold,
+                    confidence: decision.confidence,
+                    reasoning: format!(
+                        "regime: transition (unclear) — {}",
+                        decision.reasoning
+                    ),
+                };
             }
 
             decision
