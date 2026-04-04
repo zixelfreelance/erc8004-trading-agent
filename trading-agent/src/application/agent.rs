@@ -23,6 +23,8 @@ pub struct TradingAgent<M, D, E, V, S, P> {
     pub position: Mutex<PositionState>,
     pub risk_config: RiskConfig,
     pub agent_id: String,
+    pub pair: String,
+    pub agent_wallet: String,
     pub intent_amount: f64,
     pub metrics: AgentMetrics,
     pub regime: Mutex<RegimeDetector>,
@@ -158,7 +160,14 @@ where
             self.intent_amount
         };
 
-        let intent = build_intent(&final_decision, data.price, &self.agent_id, tick_amount);
+        let intent = build_intent(
+            &final_decision,
+            data.price,
+            &self.agent_id,
+            tick_amount,
+            &self.pair,
+            &self.agent_wallet,
+        );
         let signed_intent = self.signer.sign(intent);
 
         let balance_before = self.performance.snapshot().balance;
@@ -312,6 +321,8 @@ mod tests {
             position: Mutex::new(PositionState::default()),
             risk_config: RiskConfig::default(),
             agent_id: "test-agent".into(),
+            pair: "BTCUSD".into(),
+            agent_wallet: "0x0000000000000000000000000000000000000000".into(),
             intent_amount: 0.001,
             metrics: metrics::new_metrics(),
             regime: Mutex::new(RegimeDetector::with_defaults()),

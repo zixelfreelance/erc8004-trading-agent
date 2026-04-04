@@ -20,8 +20,8 @@ dotenvy = "0.15"
 schemars = { version = "0.8", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-ethers-core = "2"
-ethers-signers = { version = "2", default-features = false }
+ethers = { version = "2", default-features = false, features = ["abigen", "rustls"] }
+hex = "0.4"
 sha2 = "0.10"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "net"] }
 axum = "0.7"

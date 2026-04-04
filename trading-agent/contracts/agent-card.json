@@ -6,17 +6,17 @@
   "services": [
     {
       "name": "trading-dashboard",
-      "endpoint": "http://localhost:3030/logs",
+      "endpoint": "https://trading-agent-95p9.onrender.com/logs",
       "description": "Live trade log with decision artifacts, risk gate outcomes, and performance metrics"
     },
     {
       "name": "metrics",
-      "endpoint": "http://localhost:3030/metrics",
+      "endpoint": "https://trading-agent-95p9.onrender.com/metrics",
       "description": "Real-time counters: ticks, trades executed, trades blocked, holds, errors"
     },
     {
       "name": "decision-schema",
-      "endpoint": "http://localhost:3030/decision-schema",
+      "endpoint": "https://trading-agent-95p9.onrender.com/decision-schema",
       "description": "JSON Schema for the Decision type (Buy/Sell/Hold with confidence and reasoning)"
     }
   ],

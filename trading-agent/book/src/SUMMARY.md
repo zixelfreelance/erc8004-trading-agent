@@ -21,6 +21,10 @@
 - [Pitch Deck (Slides)](./slides.md)
 - [Mind Map](./mind-map-page.md)
 
+# Verification
+
+- [Codebase Proof](./codebase-proof.md)
+
 # Reference
 
 - [Changelog](./changelog.md)

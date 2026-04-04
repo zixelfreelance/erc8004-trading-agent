@@ -39,6 +39,10 @@ async fn main() -> anyhow::Result<()> {
     let agent_id = std::env::var("AGENT_ID").unwrap_or_else(|_| "agent-001".to_string());
     let signing_key =
         std::env::var("AGENT_SIGNING_KEY").unwrap_or_else(|_| "dev-local-key".to_string());
+    let chain_id: u64 = std::env::var("CHAIN_ID")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(11155111);
     let initial_balance: f64 = std::env::var("AGENT_INITIAL_BALANCE")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -168,9 +172,38 @@ async fn main() -> anyhow::Result<()> {
     let reputation_registry = std::env::var("REPUTATION_REGISTRY").unwrap_or_default();
     let chain_rpc_url = std::env::var("CHAIN_RPC_URL").unwrap_or_default();
 
-    let identity_adapter =
-        ChainIdentityAdapter::new(identity_registry.clone(), chain_rpc_url.clone());
-    let reputation_adapter = ChainReputationAdapter::new(reputation_registry, chain_rpc_url);
+    let risk_router_env = std::env::var("RISK_ROUTER").unwrap_or_default();
+
+    let (identity_adapter, reputation_adapter, risk_router_adapter) =
+        if !chain_rpc_url.is_empty() && !signing_key.is_empty() {
+            match adapters::chain_provider::build_client(&chain_rpc_url, &signing_key, chain_id) {
+                Ok(client) => {
+                    eprintln!("chain: provider connected to {chain_rpc_url}");
+                    (
+                        ChainIdentityAdapter::new(identity_registry.clone(), client.clone()),
+                        ChainReputationAdapter::new(reputation_registry, client.clone()),
+                        Some(adapters::chain_risk_router::ChainRiskRouterAdapter::new(
+                            risk_router_env,
+                            client,
+                        )),
+                    )
+                }
+                Err(e) => {
+                    eprintln!("chain: provider build failed: {e:#}, using noop adapters");
+                    (
+                        ChainIdentityAdapter::noop(),
+                        ChainReputationAdapter::noop(),
+                        None,
+                    )
+                }
+            }
+        } else {
+            (
+                ChainIdentityAdapter::noop(),
+                ChainReputationAdapter::noop(),
+                None,
+            )
+        };
 
     // Register agent identity on-chain if configured
     if identity_adapter.is_configured() {
@@ -218,15 +251,29 @@ async fn main() -> anyhow::Result<()> {
         None
     };
 
-    let chain_id: u64 = std::env::var("CHAIN_ID")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(11155111);
+    // Derive wallet address from signing key for intent metadata
+    let agent_wallet = if signing_key.starts_with("0x")
+        || (signing_key.len() == 64 && signing_key.chars().all(|c| c.is_ascii_hexdigit()))
+    {
+        use ethers::signers::Signer as _;
+        let clean = signing_key.strip_prefix("0x").unwrap_or(&signing_key);
+        clean
+            .parse::<ethers::signers::LocalWallet>()
+            .map(|w| format!("{:?}", w.address()))
+            .unwrap_or_default()
+    } else {
+        String::new()
+    };
+
+    let risk_router_addr = std::env::var("RISK_ROUTER").unwrap_or_default();
+    let verifying_contract: ethers::core::types::Address = risk_router_addr
+        .parse()
+        .unwrap_or(ethers::core::types::Address::zero());
 
     let signer: SignerDriver = if signing_key.starts_with("0x")
         || (signing_key.len() == 64 && signing_key.chars().all(|c| c.is_ascii_hexdigit()))
     {
-        SignerDriver::Eip712(Eip712Signer::new(&signing_key, chain_id)?)
+        SignerDriver::Eip712(Eip712Signer::new(&signing_key, chain_id, verifying_contract)?)
     } else {
         SignerDriver::Simple(SimpleSigner::new(signing_key))
     };
@@ -246,6 +293,8 @@ async fn main() -> anyhow::Result<()> {
         position: std::sync::Mutex::new(PositionState::default()),
         risk_config,
         agent_id,
+        pair: pair.clone(),
+        agent_wallet,
         intent_amount,
         metrics: agent_metrics,
         regime: std::sync::Mutex::new(RegimeDetector::with_defaults()),

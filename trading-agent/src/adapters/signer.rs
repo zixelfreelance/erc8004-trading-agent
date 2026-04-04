@@ -1,6 +1,6 @@
-use ethers_core::types::{H256, U256};
-use ethers_core::utils::keccak256;
-use ethers_signers::{LocalWallet, Signer};
+use ethers::core::types::{Address, H256, U256};
+use ethers::core::utils::keccak256;
+use ethers::signers::{LocalWallet, Signer};
 use sha2::{Digest, Sha256};
 
 use crate::domain::intent::TradeIntent;
@@ -32,20 +32,32 @@ impl SignerPort for SimpleSigner {
 
 pub struct Eip712Signer {
     wallet: LocalWallet,
+    verifying_contract: Address,
 }
 
 impl Eip712Signer {
-    pub fn new(private_key_hex: &str, chain_id: u64) -> anyhow::Result<Self> {
+    pub fn new(
+        private_key_hex: &str,
+        chain_id: u64,
+        verifying_contract: Address,
+    ) -> anyhow::Result<Self> {
         let clean = private_key_hex
             .strip_prefix("0x")
             .unwrap_or(private_key_hex);
         let wallet: LocalWallet = clean.parse::<LocalWallet>()?.with_chain_id(chain_id);
-        Ok(Self { wallet })
+        Ok(Self {
+            wallet,
+            verifying_contract,
+        })
     }
 
+    /// EIP-712 domain separator matching OZ's EIP712("RiskRouter", "1")
+    /// Domain type: EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)
     fn domain_separator(&self) -> H256 {
-        let type_hash = keccak256("EIP712Domain(string name,string version,uint256 chainId)");
-        let name_hash = keccak256("TrustAgent");
+        let type_hash = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)",
+        );
+        let name_hash = keccak256("RiskRouter");
         let version_hash = keccak256("1");
         let chain_id = U256::from(self.wallet.chain_id());
 
@@ -53,35 +65,72 @@ impl Eip712Signer {
         encoded.extend_from_slice(&type_hash);
         encoded.extend_from_slice(&name_hash);
         encoded.extend_from_slice(&version_hash);
-        let mut chain_bytes = [0u8; 32];
-        chain_id.to_big_endian(&mut chain_bytes);
-        encoded.extend_from_slice(&chain_bytes);
+        let mut buf = [0u8; 32];
+        chain_id.to_big_endian(&mut buf);
+        encoded.extend_from_slice(&buf);
+        // verifyingContract as left-padded 32 bytes
+        let mut addr_buf = [0u8; 32];
+        addr_buf[12..].copy_from_slice(self.verifying_contract.as_bytes());
+        encoded.extend_from_slice(&addr_buf);
 
         H256::from(keccak256(&encoded))
     }
 
+    /// Struct hash matching RiskRouter.TRADE_INTENT_TYPEHASH
     fn struct_hash(&self, intent: &TradeIntent) -> H256 {
         let type_hash = keccak256(
-            "TradeIntent(string agentId,string action,uint256 amount,uint256 price,uint256 timestamp)",
+            "TradeIntent(uint256 agentId,address agentWallet,string pair,uint8 action,uint128 amountUsdScaled,uint32 maxSlippageBps,uint64 nonce,uint64 deadline)",
         );
 
-        let agent_id_hash = keccak256(intent.agent_id.as_bytes());
-        let action_hash = keccak256(intent.action.as_bytes());
-
-        let amount_scaled = U256::from((intent.amount * 1e18) as u128);
-        let price_scaled = U256::from((intent.price * 1e18) as u128);
-        let timestamp = U256::from(intent.timestamp as u64);
+        let agent_id = U256::from(
+            intent
+                .agent_id
+                .strip_prefix("agent-")
+                .and_then(|s| s.parse::<u64>().ok())
+                .unwrap_or(1),
+        );
+        let wallet: Address = intent
+            .agent_wallet
+            .parse()
+            .unwrap_or(Address::zero());
+        let pair_hash = keccak256(intent.pair.as_bytes());
+        let action: u8 = match intent.action.as_str() {
+            "Buy" => 0,
+            "Sell" => 1,
+            _ => 2,
+        };
 
         let mut encoded = Vec::new();
         encoded.extend_from_slice(&type_hash);
-        encoded.extend_from_slice(&agent_id_hash);
-        encoded.extend_from_slice(&action_hash);
         let mut buf = [0u8; 32];
-        amount_scaled.to_big_endian(&mut buf);
+        // agentId
+        agent_id.to_big_endian(&mut buf);
         encoded.extend_from_slice(&buf);
-        price_scaled.to_big_endian(&mut buf);
+        // agentWallet (address, left-padded)
+        buf = [0u8; 32];
+        buf[12..].copy_from_slice(wallet.as_bytes());
         encoded.extend_from_slice(&buf);
-        timestamp.to_big_endian(&mut buf);
+        // pair (hashed string)
+        encoded.extend_from_slice(&pair_hash);
+        // action (uint8)
+        buf = [0u8; 32];
+        buf[31] = action;
+        encoded.extend_from_slice(&buf);
+        // amountUsdScaled (uint128)
+        buf = [0u8; 32];
+        U256::from(intent.amount_usd_scaled).to_big_endian(&mut buf);
+        encoded.extend_from_slice(&buf);
+        // maxSlippageBps (uint32)
+        buf = [0u8; 32];
+        U256::from(intent.max_slippage_bps).to_big_endian(&mut buf);
+        encoded.extend_from_slice(&buf);
+        // nonce (uint64)
+        buf = [0u8; 32];
+        U256::from(intent.nonce).to_big_endian(&mut buf);
+        encoded.extend_from_slice(&buf);
+        // deadline (uint64)
+        buf = [0u8; 32];
+        U256::from(intent.deadline).to_big_endian(&mut buf);
         encoded.extend_from_slice(&buf);
 
         H256::from(keccak256(&encoded))
@@ -141,6 +190,12 @@ mod tests {
             amount: 1.0,
             price: 100.0,
             timestamp: 1000000,
+            pair: "BTCUSD".to_string(),
+            agent_wallet: "0x0000000000000000000000000000000000000000".to_string(),
+            amount_usd_scaled: 10_000_000,
+            max_slippage_bps: 50,
+            nonce: 1000000,
+            deadline: 1000300,
         }
     }
 
@@ -178,7 +233,10 @@ mod tests {
     #[test]
     fn eip712_sign_produces_0x_prefix() {
         let key = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-        let signer = Eip712Signer::new(key, 11155111).unwrap();
+        let contract = "0x0000000000000000000000000000000000000001"
+            .parse()
+            .unwrap();
+        let signer = Eip712Signer::new(key, 11155111, contract).unwrap();
         let signed = signer.sign(test_intent());
         assert!(signed.signature.starts_with("0x"));
     }
@@ -186,7 +244,10 @@ mod tests {
     #[test]
     fn eip712_deterministic() {
         let key = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-        let signer = Eip712Signer::new(key, 11155111).unwrap();
+        let contract = "0x0000000000000000000000000000000000000001"
+            .parse()
+            .unwrap();
+        let signer = Eip712Signer::new(key, 11155111, contract).unwrap();
         let sig1 = signer.sign(test_intent()).signature;
         let sig2 = signer.sign(test_intent()).signature;
         assert_eq!(sig1, sig2);
@@ -195,7 +256,10 @@ mod tests {
     #[test]
     fn eip712_different_from_sha256() {
         let key = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-        let eip = Eip712Signer::new(key, 11155111).unwrap();
+        let contract = "0x0000000000000000000000000000000000000001"
+            .parse()
+            .unwrap();
+        let eip = Eip712Signer::new(key, 11155111, contract).unwrap();
         let simple = SimpleSigner::new(key);
         let sig_eip = eip.sign(test_intent()).signature;
         let sig_simple = simple.sign(test_intent()).signature;

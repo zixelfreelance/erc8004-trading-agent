@@ -3,8 +3,11 @@ pub mod adk_decision;
 mod adk_signal_tools;
 #[allow(dead_code)]
 pub mod chain_identity;
+pub mod chain_provider;
 #[allow(dead_code)]
 pub mod chain_reputation;
+#[allow(dead_code)]
+pub mod chain_risk_router;
 pub mod decision_driver;
 pub mod http_logs;
 #[allow(dead_code)]
