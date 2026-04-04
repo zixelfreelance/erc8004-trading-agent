@@ -1,7 +1,10 @@
 target/
 book-output/
 docs/
-contracts/
+contracts/lib/
+contracts/out/
+contracts/cache/
+contracts/broadcast/
 ui/
 trades.log
 .env
