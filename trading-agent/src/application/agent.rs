@@ -256,8 +256,14 @@ where
         self.metrics.set_regime(regime_label);
 
         let perf = self.performance.snapshot();
-        self.validation
-            .log_decision(&data, &final_decision, blocked, &signed_intent, &perf, regime_label)?;
+        self.validation.log_decision(
+            &data,
+            &final_decision,
+            blocked,
+            &signed_intent,
+            &perf,
+            regime_label,
+        )?;
 
         // Return the signed intent if a trade was executed (for on-chain submission)
         let executed_trade =
