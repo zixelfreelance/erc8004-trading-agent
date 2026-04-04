@@ -1,0 +1,77 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    working-directory: trading-agent
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Foundry submodules
+        run: |
+          git submodule deinit --all -f 2>/dev/null || true
+          rm -rf contracts/lib/forge-std contracts/lib/openzeppelin-contracts
+          git clone --depth 1 https://github.com/foundry-rs/forge-std.git contracts/lib/forge-std
+          git clone --depth 1 --recurse-submodules https://github.com/OpenZeppelin/openzeppelin-contracts.git contracts/lib/openzeppelin-contracts
+
+      - name: Clone adk-rust dependency
+        run: git clone --depth 1 https://github.com/zixelfreelance/adk-rust.git ../adk-rust
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: trading-agent
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Clippy
+        run: cargo clippy --release -- -D warnings
+
+      - name: Run tests
+        run: cargo test --release
+
+  deploy-render:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
+            curl -s -X POST "$RENDER_DEPLOY_HOOK"
+            echo "Render deploy triggered"
+          else
+            echo "RENDER_DEPLOY_HOOK not set, skipping"
+          fi
+
+  deploy-vercel:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Vercel deploy
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$VERCEL_DEPLOY_HOOK" ]; then
+            curl -s -X POST "$VERCEL_DEPLOY_HOOK"
+            echo "Vercel deploy triggered"
+          else
+            echo "VERCEL_DEPLOY_HOOK not set, skipping"
+          fi
