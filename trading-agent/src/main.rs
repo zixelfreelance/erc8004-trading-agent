@@ -205,10 +205,39 @@ async fn main() -> anyhow::Result<()> {
             )
         };
 
+    let ipfs_pinner = IpfsPinner::from_env();
+
+    // Pin agent card to IPFS on startup
+    let agent_card_uri = if let Some(ref pinner) = ipfs_pinner {
+        let card = serde_json::json!({
+            "agent_id": &agent_id,
+            "pair": &pair,
+            "strategy": &strategy_display_name,
+            "risk_config": {
+                "min_confidence": risk_config.min_confidence_trade,
+                "max_drawdown": risk_config.max_drawdown,
+                "max_consecutive_losses": risk_config.max_consecutive_losses,
+                "daily_loss_limit": risk_config.daily_loss_limit,
+            },
+            "created": chrono::Utc::now().to_rfc3339(),
+        });
+        match pinner.pin_agent_card(&card).await {
+            Ok(cid) => {
+                eprintln!("ipfs: agent card pinned (cid={cid})");
+                format!("ipfs://{cid}")
+            }
+            Err(e) => {
+                eprintln!("ipfs: agent card pin failed: {e:#}");
+                std::env::var("AGENT_CARD_URI").unwrap_or_default()
+            }
+        }
+    } else {
+        std::env::var("AGENT_CARD_URI").unwrap_or_default()
+    };
+
     // Register agent identity on-chain if configured
     if identity_adapter.is_configured() {
-        let agent_uri = std::env::var("AGENT_CARD_URI").unwrap_or_default();
-        match identity_adapter.register_agent(&agent_uri).await {
+        match identity_adapter.register_agent(&agent_card_uri).await {
             Ok(id) => eprintln!("chain: agent registered with id={id}"),
             Err(e) => eprintln!("chain: identity registration failed: {e:#}"),
         }
@@ -321,7 +350,6 @@ async fn main() -> anyhow::Result<()> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(10); // fetch order book every N ticks
 
-    let ipfs_pinner = IpfsPinner::from_env();
     if ipfs_pinner.is_some() {
         eprintln!(
             "ipfs: Pinata configured — artifacts will be pinned every {reputation_interval} ticks"
@@ -344,9 +372,40 @@ async fn main() -> anyhow::Result<()> {
                             .submit_intent(&signed_intent.intent, &signed_intent.signature)
                             .await
                         {
-                            Ok(Some(tx)) => eprintln!("chain: intent submitted (tx={tx})"),
+                            Ok(Some(tx)) => {
+                                eprintln!("chain: intent submitted (tx={tx})");
+                                // Backfill tx_hash on the last log entry
+                                if let Ok(mut entries) =
+                                    agent.validation.entries.lock()
+                                {
+                                    if let Some(last) = entries.last_mut() {
+                                        last.tx_hash = Some(tx);
+                                    }
+                                }
+                            }
                             Ok(None) => {}
                             Err(e) => eprintln!("chain: intent submission failed: {e:#}"),
+                        }
+                    }
+                }
+
+                // Pin trade artifact to IPFS and backfill CID
+                if let Some(ref pinner) = ipfs_pinner {
+                    let artifact = {
+                        let entries = agent.validation.entries.lock().expect("log mutex");
+                        entries.last().map(|r| serde_json::to_value(r).ok()).flatten()
+                    };
+                    if let Some(artifact) = artifact {
+                        match pinner.pin_artifact(&artifact).await {
+                            Ok(cid) => {
+                                eprintln!("ipfs: trade pinned (cid={cid})");
+                                if let Ok(mut entries) = agent.validation.entries.lock() {
+                                    if let Some(last) = entries.last_mut() {
+                                        last.cid = Some(cid);
+                                    }
+                                }
+                            }
+                            Err(e) => eprintln!("ipfs: trade pin failed: {e:#}"),
                         }
                     }
                 }
@@ -399,7 +458,16 @@ async fn main() -> anyhow::Result<()> {
                 value: (perf.pnl * 100.0) as i128,
                 decimals: 2,
             };
-            match reputation_adapter.post_feedback(0, &metric, "").await {
+            // Include latest IPFS CID as feedback URI if available
+            let feedback_uri = agent
+                .validation
+                .entries
+                .lock()
+                .ok()
+                .and_then(|e| e.last().and_then(|r| r.cid.clone()))
+                .map(|cid| format!("ipfs://{cid}"))
+                .unwrap_or_default();
+            match reputation_adapter.post_feedback(0, &metric, &feedback_uri).await {
                 Ok(tx) => eprintln!("chain: reputation posted (tx={tx}, pnl={:.2})", perf.pnl),
                 Err(e) => eprintln!("chain: reputation post failed: {e:#}"),
             }

@@ -34,6 +34,10 @@
     balance: number;
     peak_balance: number;
     blocked_by_risk: boolean;
+    regime?: string;
+    tx_hash?: string;
+    blocked_reason?: string;
+    cid?: string;
   };
 
   type Metrics = {
@@ -372,6 +376,7 @@
             <th>PnL</th>
             <th>DD %</th>
             <th>Chain</th>
+            <th>IPFS</th>
           </tr>
         </thead>
         <tbody>
@@ -389,6 +394,7 @@
               <td>{row.pnl.toFixed(2)}</td>
               <td>{(row.drawdown * 100).toFixed(2)}</td>
               <td>{#if row.tx_hash}<a href="https://sepolia.etherscan.io/tx/{row.tx_hash}" target="_blank" class="tx-link" title={row.tx_hash}>{row.tx_hash.slice(0, 10)}...</a>{:else}<span class="muted">—</span>{/if}</td>
+              <td>{#if row.cid}<a href="https://ipfs.io/ipfs/{row.cid}" target="_blank" class="tx-link" title={row.cid}>{row.cid.slice(0, 10)}...</a>{:else}<span class="muted">—</span>{/if}</td>
             </tr>
           {/each}
         </tbody>

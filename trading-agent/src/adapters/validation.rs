@@ -76,6 +76,7 @@ impl ValidationPort for ArtifactValidation {
             regime: Some(regime.to_string()),
             tx_hash: None, // Set by main loop after chain submission
             blocked_reason: blocked_reason.clone(),
+            cid: None,
         };
 
         {
