@@ -1,6 +1,14 @@
 # Proof-of-Trust Trading Agent
 
+![Cover](docs/cover.png)
+
 > An AI trading agent that cannot break its own rules — and proves it on-chain.
+
+[![Demo Video](https://img.shields.io/badge/Demo-YouTube-red)](https://youtu.be/7zc0qDvCOKo)
+[![Dashboard](https://img.shields.io/badge/Dashboard-Vercel-black)](https://erc8004-trading-agent.vercel.app)
+[![Docs](https://img.shields.io/badge/Docs-GitHub%20Pages-blue)](https://zixelfreelance.github.io/erc8004-trading-agent/)
+[![X](https://img.shields.io/badge/@zixlancer-X-black)](https://x.com/zixlancer)
+[![LinkedIn](https://img.shields.io/badge/Amin%20Sarafraz-LinkedIn-blue)](https://www.linkedin.com/in/amin-sarafraz-abab883bb/)
 
 ## Vision
 
@@ -152,6 +160,26 @@ Stateful detector with hysteresis classifies market as **Trending** (ADX > 22), 
 - **On-chain:** Solidity on Sepolia — Identity Registry, Reputation Registry, Risk Router
 - **IPFS:** Pinata — cryptographic audit trail for trade artifacts
 - **Dashboard:** SvelteKit on Vercel
+
+## Deployed Contracts (Sepolia)
+
+| Contract | Address |
+|---|---|
+| AgentIdentityRegistry | [`0xc83F0B94E7969Cc2265aB0A187Ba0F2e6A5B9554`](https://sepolia.etherscan.io/address/0xc83F0B94E7969Cc2265aB0A187Ba0F2e6A5B9554) |
+| AgentReputationRegistry | [`0x40dB57F7D848457289CEda81F39df15C4203D576`](https://sepolia.etherscan.io/address/0x40dB57F7D848457289CEda81F39df15C4203D576) |
+| RiskRouter | [`0xCbC5DFeD364b6D65233DfA6edCcb95088F8f189B`](https://sepolia.etherscan.io/address/0xCbC5DFeD364b6D65233DfA6edCcb95088F8f189B) |
+
+## Links
+
+| | |
+|---|---|
+| Demo Video | https://youtu.be/7zc0qDvCOKo |
+| Dashboard | https://erc8004-trading-agent.vercel.app |
+| Docs | https://zixelfreelance.github.io/erc8004-trading-agent/ |
+| Hackathon | https://lablab.ai/ai-hackathons/ai-trading-agents |
+| Project Page | https://lablab.ai/ai-hackathons/ai-trading-agents/proof-of-trust/proof-of-trust-trading-agent |
+| X | https://x.com/zixlancer |
+| LinkedIn | https://www.linkedin.com/in/amin-sarafraz-abab883bb/ |
 
 ## Hackathon
 
