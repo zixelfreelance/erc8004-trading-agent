@@ -8,7 +8,7 @@
 [![Dashboard](https://img.shields.io/badge/Dashboard-Vercel-black)](https://erc8004-trading-agent.vercel.app)
 [![Docs](https://img.shields.io/badge/Docs-GitHub%20Pages-blue)](https://zixelfreelance.github.io/erc8004-trading-agent/)
 [![X](https://img.shields.io/badge/@zixlancer-X-black)](https://x.com/zixlancer)
-[![LinkedIn](https://img.shields.io/badge/Amin%20Sarafraz-LinkedIn-blue)](https://www.linkedin.com/in/amin-sarafraz-abab883bb/)
+[![LinkedIn](https://img.shields.io/badge/Amin%20Sarafraz-LinkedIn-blue)](https://www.linkedin.com/in/a-s-abab883bb/)
 
 ## Vision
 
@@ -179,7 +179,7 @@ Stateful detector with hysteresis classifies market as **Trending** (ADX > 22), 
 | Hackathon | https://lablab.ai/ai-hackathons/ai-trading-agents |
 | Project Page | https://lablab.ai/ai-hackathons/ai-trading-agents/proof-of-trust/proof-of-trust-trading-agent |
 | X | https://x.com/zixlancer |
-| LinkedIn | https://www.linkedin.com/in/amin-sarafraz-abab883bb/ |
+| LinkedIn | https://www.linkedin.com/in/a-s-abab883bb/ |
 
 ## Hackathon
 
