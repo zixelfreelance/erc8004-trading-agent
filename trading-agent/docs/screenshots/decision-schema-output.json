@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "Action": {
+            "enum": [
+                "Buy",
+                "Sell",
+                "Hold"
+            ],
+            "type": "string"
+        }
+    },
+    "properties": {
+        "action": {
+            "$ref": "#/definitions/Action"
+        },
+        "confidence": {
+            "format": "double",
+            "type": "number"
+        },
+        "reasoning": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "action",
+        "confidence",
+        "reasoning"
+    ],
+    "title": "Decision",
+    "type": "object"
+}

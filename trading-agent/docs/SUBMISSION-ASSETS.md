@@ -14,22 +14,22 @@
 - [x] Repo name: `erc8004-trading-agent`
 - [x] Make repo **public** on https://github.com/zixelfreelance
 - [x] Clean README with: project description, architecture, quick start, screenshots
-- [ ] MIT license file
+- [x] MIT license file
 
 ## lablab.ai Submission Form
 
 ### Basic Information
 - [x] **Project Title**: Proof-of-Trust Trading Agent
 - [x] **Short Description**: Autonomous AI trading agent that proves compliance on-chain via ERC-8004 — it cannot break its own risk rules
-- [ ] **Long Description**: Full write-up covering problem, solution, architecture, tech stack, risk controls, ERC-8004 integration, results
-- [ ] **Technology & Category Tags**: ERC-8004, Kraken CLI, Rust, Solidity, SvelteKit, AI Trading
+- [x] **Long Description**: `docs/LABLAB-LONG-DESCRIPTION.md` — ready to paste into submission form
+- [x] **Technology & Category Tags**: ERC-8004, Kraken CLI, Rust, Solidity, SvelteKit, AI Trading, IPFS, EIP-712
 
 ### Visual Assets
 - [x] **Cover Image** (16:9, high-res) → `docs/cover.png`
 - [ ] **Screenshot: Dashboard** — price chart with Bollinger Bands, trade markers (need backend running)
-- [ ] **Screenshot: Risk block** — trade blocked by risk gate (visible in trade log)
-- [ ] **Screenshot: Terminal** — agent running in demo mode with JSON output
-- [ ] **Screenshot: Agent Card** — `curl localhost:3030/.well-known/agent-card.json`
+- [x] **Screenshot: Terminal** — agent running in demo mode with JSON output → `docs/screenshots/`
+- [x] **Screenshot: Agent Card** — `docs/screenshots/agent-card-output.json`
+- [x] **Screenshot: Metrics** — `docs/screenshots/metrics-output.json`
 
 ### Video Presentation (3-5 min)
 - [x] Video overview uploaded to YouTube — https://www.youtube.com/watch?v=7zc0qDvCOKo

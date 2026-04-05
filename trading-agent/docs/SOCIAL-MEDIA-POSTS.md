@@ -59,29 +59,28 @@ Reply 3:
 ```
 Tech: Rust + 3 Solidity contracts + SvelteKit dashboard + Claude AI + Kraken CLI
 
-70+ tests. EIP-712 signed intents. Agent Card at /.well-known/agent-card.json
+79 tests. EIP-712 signed intents. Agent Card at /.well-known/agent-card.json
 
 github.com/zixelfreelance/erc8004-trading-agent
 
 #ERC8004 #DeFi
 ```
 
-### Post 2.5 — Day 4 Progress Update (April 4)
+### Post 2.5 — Day 5 Progress Update (April 5)
 ```
-Day 4 of @lablabai AI Trading Agents hackathon
+Day 5 of @lablabai AI Trading Agents hackathon
 
-Proof-of-Trust is now live:
-- 3 smart contracts deployed to Sepolia
+103 commits deep. Proof-of-Trust is live:
+- 3 contracts on Sepolia
 - EIP-712 signed trade intents
-- Real-time dashboard on Vercel
+- Dashboard on Vercel
 - 10 risk controls, 7 technical indicators
 - IPFS audit trail via Pinata
+- 79 tests (72 unit + 7 e2e)
 
-Paper trading with live BTC prices. Agent holds when unsure.
+Demo mode working. MIT licensed.
 
-Built with Rust + Solidity + @krakenfx CLI
-
-@Surgexyz_ #AITradingAgents #ERC8004
+@krakenfx @Surgexyz_ #AITradingAgents
 ```
 (Attach dashboard screenshot from erc8004-trading-agent.vercel.app)
 
@@ -104,6 +103,19 @@ Default: paper + momentum = $0, no keys, full demo.
 @lablabai @krakenfx @Surgexyz_
 ```
 
+### Post 2.7 — Demo Mode Fix (April 5)
+```
+We test what we preach.
+
+Fixed MockExecution today — demo mode now runs e2e with zero external deps.
+
+79 tests passing (72 unit + 7 e2e). Every risk gate, every signal, every signed intent — verified in CI.
+
+Trust isn't a claim. It's a test suite.
+
+@lablabai @krakenfx @Surgexyz_ #AITradingAgents
+```
+
 ### Post 3 — Dashboard Demo (April 5)
 ```
 Real-time dashboard for our AI trading agent:
@@ -113,7 +125,9 @@ Real-time dashboard for our AI trading agent:
 • PnL tracking
 • Risk gate decisions in trade log
 
-Every blocked trade is visible. Transparency by default.
+103 commits, 79 tests, 3 contracts on Sepolia.
+
+Demo video: youtu.be/7zc0qDvCOKo
 
 @lablabai @krakenfx @Surgexyz_ #AITradingAgents
 ```
@@ -192,15 +206,19 @@ GitHub: https://github.com/zixelfreelance/erc8004-trading-agent
 ```
 Week 1 update on my AI trading agent build:
 
-✅ 70+ tests passing
-✅ 3 Solidity contracts deployed
-✅ Real-time SvelteKit dashboard
+✅ 79 tests passing (72 unit + 7 e2e)
+✅ 103 commits
+✅ 3 Solidity contracts deployed to Sepolia
+✅ Real-time SvelteKit dashboard on Vercel
 ✅ ERC-8004 agent identity registered
 ✅ Risk gates blocking 20%+ of trades
+✅ IPFS audit trail via Pinata
+✅ Demo mode fully working
 
 The best part? Every decision is signed with EIP-712 and verifiable on-chain. Not logging — cryptographic proof.
 
-Next: live trading via Kraken CLI + video demo.
+Demo video: https://youtu.be/7zc0qDvCOKo
+GitHub: https://github.com/zixelfreelance/erc8004-trading-agent
 
 #AI #DeFi #BuildInPublic
 ```
@@ -213,6 +231,9 @@ Next: live trading via Kraken CLI + video demo.
 |------|----------|------|
 | Apr 1 | X + LinkedIn | Post 1 — Announcement |
 | Apr 3 | X | Post 2 — Tech Thread |
+| Apr 4 | X | Post 2.6 — Execution Modes Explainer |
+| Apr 5 | X | Post 2.5 — Day 5 Progress Update |
+| Apr 5 | X | Post 2.7 — Demo Mode Fix |
 | Apr 5 | X | Post 3 — Dashboard Demo (with screenshot) |
 | Apr 6 | LinkedIn | Post 2 — Mid-Hackathon Update |
 | Apr 7 | X | Post 4 — Agent Card |
