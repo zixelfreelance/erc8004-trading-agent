@@ -18,6 +18,7 @@ pub mod ipfs_pinner;
 pub mod kraken_book;
 pub mod kraken_execution;
 pub mod kraken_market;
+pub mod mock_execution;
 #[allow(dead_code)]
 pub mod kraken_mcp;
 #[allow(dead_code)]

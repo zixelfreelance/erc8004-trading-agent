@@ -10,3 +10,9 @@ pub struct ExecutionFill {
 pub trait ExecutionPort: Send + Sync {
     fn execute(&self, action: &Action) -> anyhow::Result<ExecutionFill>;
 }
+
+impl ExecutionPort for Box<dyn ExecutionPort> {
+    fn execute(&self, action: &Action) -> anyhow::Result<ExecutionFill> {
+        (**self).execute(action)
+    }
+}

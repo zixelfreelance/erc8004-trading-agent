@@ -15,6 +15,7 @@ use adapters::kraken_book;
 use adapters::kraken_execution::{ExecutionMode, KrakenExecution};
 use adapters::kraken_market::KrakenMarket;
 use adapters::kraken_ws::KrakenWsStream;
+use adapters::mock_execution::MockExecution;
 use adapters::mock_market::MockMarket;
 use adapters::momentum_decision::MomentumVolatilityDecision;
 use adapters::performance_tracker::PerformanceTracker;
@@ -25,6 +26,7 @@ use domain::metrics;
 use domain::regime::RegimeDetector;
 use domain::risk::{PositionState, RiskConfig};
 use domain::strategy::{StrategyConfig, STRATEGY_DISPLAY_NAME};
+use ports::execution::ExecutionPort;
 use ports::identity::IdentityPort;
 use ports::market::MarketPort;
 use ports::performance::PerformancePort;
@@ -319,7 +321,11 @@ async fn main() -> anyhow::Result<()> {
     let agent = TradingAgent {
         market,
         decision,
-        execution: KrakenExecution::new(&pair, &volume, exec_mode),
+        execution: if demo_mode {
+            Box::new(MockExecution::new(initial_balance)) as Box<dyn ExecutionPort>
+        } else {
+            Box::new(KrakenExecution::new(&pair, &volume, exec_mode)) as Box<dyn ExecutionPort>
+        },
         validation: ArtifactValidation::new("trades.log", log_entries, strategy_display_name),
         signer,
         performance: PerformanceTracker::new(initial_balance),
