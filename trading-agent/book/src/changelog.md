@@ -6,7 +6,33 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-### Added
+### Added (April 4 — Chain + IPFS Integration)
+- **Chain identity adapter:** `chain_identity.rs` calls `AgentIdentityRegistry.register_with_uri()` on Sepolia
+- **Chain reputation adapter:** `chain_reputation.rs` calls `AgentReputationRegistry.give_feedback()` on Sepolia
+- **Chain RiskRouter adapter:** `chain_risk_router.rs` submits signed intents on-chain, returns tx_hash
+- **Chain provider:** `chain_provider.rs` shared `SignerMiddleware<Provider<Http>, LocalWallet>` builder
+- **RiskRouter port:** `ports/risk_router.rs` trait for on-chain intent submission
+- **Per-trade IPFS pinning:** every executed trade is pinned to IPFS, CID backfilled to log record
+- **Periodic IPFS snapshots:** performance + metrics pinned every N ticks (`AGENT_IPFS_INTERVAL`)
+- **Agent card IPFS pin:** on startup, pins agent-card.json and uses CID as identity URI
+- **tx_hash backfill:** log records include on-chain tx hash from RiskRouter submission
+- **Sharpe ratio + win rate:** added to performance metrics and dashboard
+- **Regime tracking in metrics:** exposed via /metrics endpoint
+- **Agent card production URLs:** endpoints point to Render (`trading-agent-95p9.onrender.com`)
+- **CI/CD pipeline:** GitHub Actions for test + fmt + clippy, auto-deploy to Render + Vercel
+- **mdBook docs site:** deployed to GitHub Pages (`zixelfreelance.github.io/erc8004-trading-agent`)
+- **ABI files:** `/abi/` directory with contract ABIs for ethers `abigen!`
+
+### Changed (April 4)
+- Chain adapters upgraded from stubs to live ethers-rs contract calls
+- `chain_identity.rs` — was noop, now calls register/get_wallet/get_uri
+- `chain_reputation.rs` — was noop, now calls post_feedback/get_reputation
+- IPFS pinner — was unused, now called at 3 points in main loop
+- Agent card endpoints — was `localhost:3030`, now production Render URL
+- Dashboard `VITE_LOGS_URL` — configurable via env var (defaults to localhost for dev)
+- Test count: 70 → 72
+
+### Added (Sprint 1-3)
 - **Demo mode:** `AGENT_DEMO_MODE=true` replays 50-tick MockMarket sequence for reliable demos
 - **WebSocket streaming:** `KrakenWsStream` logs real-time price/bid/ask each tick
 - **Order book depth:** periodic `kraken book` fetch with spread + imbalance logging
