@@ -124,24 +124,31 @@ where
 
         let perf_snapshot = self.performance.snapshot();
         let current_tick = self.metrics.snapshot().ticks;
-        let position_guard = self.position.lock().expect("position mutex poisoned");
-        let (final_decision, blocked) = risk::apply_risk_with_tick(
-            decision,
-            &position_guard,
-            &perf_snapshot,
-            &self.risk_config,
-            current_tick,
-        );
-        drop(position_guard);
-
-        if blocked {
-            self.metrics.record_blocked();
+        let (final_decision, blocked) = if atr_forced_sell {
+            // ATR emergency sell bypasses risk gates — the position must be closed
+            self.metrics.record_executed();
+            (decision, false)
         } else {
-            match final_decision.action {
-                Action::Buy | Action::Sell => self.metrics.record_executed(),
-                Action::Hold => self.metrics.record_hold(),
+            let position_guard = self.position.lock().expect("position mutex poisoned");
+            let result = risk::apply_risk_with_tick(
+                decision,
+                &position_guard,
+                &perf_snapshot,
+                &self.risk_config,
+                current_tick,
+            );
+            drop(position_guard);
+
+            if result.1 {
+                self.metrics.record_blocked();
+            } else {
+                match result.0.action {
+                    Action::Buy | Action::Sell => self.metrics.record_executed(),
+                    Action::Hold => self.metrics.record_hold(),
+                }
             }
-        }
+            result
+        };
 
         // Volatility-scaled position sizing
         let tick_amount = if matches!(final_decision.action, Action::Buy | Action::Sell) {

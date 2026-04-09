@@ -1,7 +1,6 @@
-use std::process::Command;
-
 use serde_json::Value;
 
+use super::cmd_timeout::run_with_timeout;
 use crate::domain::model::MarketData;
 use crate::ports::market::MarketPort;
 
@@ -145,9 +144,7 @@ impl KrakenMarket {
 
 impl MarketPort for KrakenMarket {
     fn get_market_data(&self) -> anyhow::Result<MarketData> {
-        let output = Command::new("kraken")
-            .args(["ticker", &self.pair, "-o", "json"])
-            .output()?;
+        let output = run_with_timeout("kraken", &["ticker", &self.pair, "-o", "json"])?;
         if !output.status.success() {
             anyhow::bail!(
                 "kraken ticker failed: {}",
@@ -156,17 +153,11 @@ impl MarketPort for KrakenMarket {
         }
         let ticker = Self::parse_ticker_json(&output.stdout)?;
 
-        let ohlc = match Command::new("kraken")
-            .args([
-                "ohlc",
-                &self.pair,
-                "--interval",
-                &self.ohlc_interval_minutes.to_string(),
-                "-o",
-                "json",
-            ])
-            .output()
-        {
+        let interval_str = self.ohlc_interval_minutes.to_string();
+        let ohlc = match run_with_timeout(
+            "kraken",
+            &["ohlc", &self.pair, "--interval", &interval_str, "-o", "json"],
+        ) {
             Ok(out) if out.status.success() => {
                 Self::parse_ohlc_data(&out.stdout, self.ohlc_lookback).unwrap_or(OhlcData {
                     closes: Vec::new(),

@@ -1,7 +1,6 @@
-use std::process::Command;
-
 use serde_json::Value;
 
+use super::cmd_timeout::run_with_timeout;
 use crate::domain::model::Action;
 use crate::ports::execution::{ExecutionFill, ExecutionPort};
 
@@ -40,7 +39,7 @@ impl KrakenExecution {
     }
 
     fn run_cmd(&self, args: &[&str]) -> anyhow::Result<Vec<u8>> {
-        let output = Command::new("kraken").args(args).output()?;
+        let output = run_with_timeout("kraken", args)?;
         if !output.status.success() {
             anyhow::bail!(
                 "kraken {}: {}",

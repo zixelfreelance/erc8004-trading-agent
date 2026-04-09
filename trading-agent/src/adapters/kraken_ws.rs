@@ -2,6 +2,7 @@ use std::io::{BufRead, BufReader};
 use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 
 use serde_json::Value;
 
@@ -15,50 +16,85 @@ pub struct WsTick {
 }
 
 /// Manages a background `kraken ws` subprocess and provides the latest tick.
+/// Automatically reconnects with exponential backoff on disconnect.
 pub struct KrakenWsStream {
     latest: Arc<Mutex<Option<WsTick>>>,
     _child: Option<Child>,
 }
 
 impl KrakenWsStream {
-    /// Start streaming ticker data for a pair. Spawns a background thread.
+    /// Start streaming ticker data for a pair. Spawns a background thread
+    /// that reconnects automatically on disconnect.
     pub fn start(pair: &str) -> Self {
         let latest: Arc<Mutex<Option<WsTick>>> = Arc::new(Mutex::new(None));
         let latest_clone = Arc::clone(&latest);
 
-        // kraken ws uses "BTC/USD" format, not "BTCUSD"
         let ws_pair = Self::format_ws_pair(pair);
 
-        let child = Command::new("kraken")
-            .args(["ws", "ticker", &ws_pair, "-o", "json"])
-            .stdout(Stdio::piped())
-            .stderr(Stdio::null())
-            .spawn();
+        // Spawn a reconnecting reader thread
+        thread::spawn(move || {
+            Self::reconnect_loop(&ws_pair, &latest_clone);
+        });
 
-        match child {
-            Ok(mut child) => {
-                let stdout = child.stdout.take().expect("piped stdout");
-                thread::spawn(move || {
+        Self {
+            latest,
+            _child: None,
+        }
+    }
+
+    fn reconnect_loop(ws_pair: &str, latest: &Arc<Mutex<Option<WsTick>>>) {
+        let mut backoff = Duration::from_secs(1);
+        let max_backoff = Duration::from_secs(60);
+
+        loop {
+            match Command::new("kraken")
+                .args(["ws", "ticker", ws_pair, "-o", "json"])
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+            {
+                Ok(mut child) => {
+                    let stdout = match child.stdout.take() {
+                        Some(s) => s,
+                        None => {
+                            eprintln!("kraken-ws: no stdout pipe");
+                            thread::sleep(backoff);
+                            continue;
+                        }
+                    };
+
+                    // Reset backoff on successful connection
+                    backoff = Duration::from_secs(1);
+                    eprintln!("kraken-ws: connected to {ws_pair}");
+
                     let reader = BufReader::new(stdout);
                     for line in reader.lines() {
                         let Ok(line) = line else { break };
                         if let Ok(tick) = Self::parse_ws_tick(&line) {
-                            *latest_clone.lock().expect("ws mutex") = Some(tick);
+                            if let Ok(mut guard) = latest.lock() {
+                                *guard = Some(tick);
+                            }
                         }
                     }
-                });
-                Self {
-                    latest,
-                    _child: Some(child),
+
+                    // Stream ended — kill child and reconnect
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    eprintln!(
+                        "kraken-ws: disconnected, reconnecting in {}s",
+                        backoff.as_secs()
+                    );
+                }
+                Err(e) => {
+                    eprintln!(
+                        "kraken-ws: spawn failed: {e}, retrying in {}s",
+                        backoff.as_secs()
+                    );
                 }
             }
-            Err(e) => {
-                eprintln!("kraken-ws: failed to start: {e}. Falling back to polling.");
-                Self {
-                    latest,
-                    _child: None,
-                }
-            }
+
+            thread::sleep(backoff);
+            backoff = (backoff * 2).min(max_backoff);
         }
     }
 
@@ -71,12 +107,16 @@ impl KrakenWsStream {
     }
 
     pub fn is_running(&self) -> bool {
-        self._child.is_some()
+        // Check if latest tick has been received (stream is active)
+        self.latest
+            .lock()
+            .map(|g| g.is_some())
+            .unwrap_or(false)
     }
 
     /// Get the latest tick (if any). Returns None if no data received yet.
     pub fn latest_tick(&self) -> Option<WsTick> {
-        self.latest.lock().expect("ws mutex").clone()
+        self.latest.lock().ok()?.clone()
     }
 
     fn format_ws_pair(pair: &str) -> String {
@@ -133,14 +173,5 @@ impl KrakenWsStream {
             }
         }
         None
-    }
-}
-
-impl Drop for KrakenWsStream {
-    fn drop(&mut self) {
-        if let Some(mut child) = self._child.take() {
-            let _ = child.kill();
-            let _ = child.wait();
-        }
     }
 }

@@ -10,6 +10,9 @@ use crate::ports::validation::ValidationPort;
 
 pub type SharedLogEntries = Arc<Mutex<Vec<TradeLogRecord>>>;
 
+/// Maximum number of log entries kept in memory. Older entries are drained.
+const MAX_LOG_ENTRIES: usize = 1000;
+
 pub struct ArtifactValidation {
     pub path: String,
     pub entries: SharedLogEntries,
@@ -81,6 +84,10 @@ impl ValidationPort for ArtifactValidation {
 
         {
             let mut g = self.entries.lock().expect("log mutex poisoned");
+            if g.len() >= MAX_LOG_ENTRIES {
+                let drain_count = g.len() - MAX_LOG_ENTRIES + 1;
+                g.drain(..drain_count);
+            }
             g.push(record.clone());
         }
 
