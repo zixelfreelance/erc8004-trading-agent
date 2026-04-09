@@ -76,14 +76,14 @@ Additionally, the agent enforces a **trade cooldown** (minimum 3 ticks between t
 - **Signing:** EIP-712 ECDSA with secp256k1, SHA-256 fallback for environments without private keys
 - **On-Chain:** 3 Solidity contracts on Sepolia -- Identity Registry, Reputation Registry, Risk Router
 - **IPFS:** Pinata for cryptographic audit trail -- every decision artifact pinned with CID backfill
-- **Dashboard:** SvelteKit on Vercel with Chart.js -- price chart with Bollinger Bands, buy/sell markers, PnL tracking, drawdown monitoring, risk gate decision log
+- **Dashboard:** SvelteKit on Google Cloud Run with Chart.js -- price chart with Bollinger Bands, buy/sell markers, PnL tracking, drawdown monitoring, risk gate decision log
 - **Decision Modes:** Pure momentum (no API key), Claude ADK (full AI), or Hybrid (rules + AI refinement)
 
 ## Results
 
 - **72 passing tests** across the Rust codebase covering indicators, risk gates, position sizing, fee filtering, circuit breaker logic, signing, and the full agent loop
 - **3 deployed and verified contracts** on Sepolia with real on-chain state
-- **Real-time dashboard** at [erc8004-trading-agent.vercel.app](https://erc8004-trading-agent.vercel.app) showing live price charts, trade markers, PnL curves, and risk gate decisions
+- **Real-time dashboard** at [trading-dashboard-675072986521.us-central1.run.app](https://trading-dashboard-675072986521.us-central1.run.app) showing live price charts, trade markers, PnL curves, and risk gate decisions
 - **IPFS audit trail** with Pinata integration for every trade decision artifact
 - **HTTP API** exposing `/metrics`, `/logs`, `/decision-schema`, and `/.well-known/agent-card.json` for programmatic access and ERC-8004 discovery
 - **Three execution modes** (paper, demo, live) making the system immediately runnable with zero configuration

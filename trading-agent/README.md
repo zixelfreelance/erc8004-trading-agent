@@ -5,7 +5,7 @@
 > An AI trading agent that cannot break its own rules — and proves it on-chain.
 
 [![Demo Video](https://img.shields.io/badge/Demo-YouTube-red)](https://youtu.be/7zc0qDvCOKo)
-[![Dashboard](https://img.shields.io/badge/Dashboard-Vercel-black)](https://erc8004-trading-agent.vercel.app)
+[![Dashboard](https://img.shields.io/badge/Dashboard-Cloud%20Run-blue)](https://trading-dashboard-675072986521.us-central1.run.app)
 [![Docs](https://img.shields.io/badge/Docs-GitHub%20Pages-blue)](https://zixelfreelance.github.io/erc8004-trading-agent/)
 [![X](https://img.shields.io/badge/@zixlancer-X-black)](https://x.com/zixlancer)
 [![LinkedIn](https://img.shields.io/badge/Amin%20Sarafraz-LinkedIn-blue)](https://www.linkedin.com/in/a-s-abab883bb/)
@@ -159,7 +159,7 @@ Stateful detector with hysteresis classifies market as **Trending** (ADX > 22), 
 - **Signing:** EIP-712 ECDSA (secp256k1) with SHA-256 fallback
 - **On-chain:** Solidity on Sepolia — Identity Registry, Reputation Registry, Risk Router
 - **IPFS:** Pinata — cryptographic audit trail for trade artifacts
-- **Dashboard:** SvelteKit on Vercel
+- **Dashboard:** SvelteKit on Google Cloud Run
 
 ## Deployed Contracts (Sepolia)
 
@@ -174,7 +174,9 @@ Stateful detector with hysteresis classifies market as **Trending** (ADX > 22), 
 | | |
 |---|---|
 | Demo Video | https://youtu.be/7zc0qDvCOKo |
-| Dashboard | https://erc8004-trading-agent.vercel.app |
+| Dashboard | https://trading-dashboard-675072986521.us-central1.run.app |
+| Backend API | https://trading-agent-675072986521.us-central1.run.app |
+| Agent Card | https://trading-agent-675072986521.us-central1.run.app/.well-known/agent-card.json |
 | Docs | https://zixelfreelance.github.io/erc8004-trading-agent/ |
 | Hackathon | https://lablab.ai/ai-hackathons/ai-trading-agents |
 | Project Page | https://lablab.ai/ai-hackathons/ai-trading-agents/proof-of-trust/proof-of-trust-trading-agent |

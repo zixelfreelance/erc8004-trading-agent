@@ -1,6 +1,6 @@
 # Project Status
 
-> Last updated: 2026-04-01 (Day 3 — Sprint 2+3 complete, code-side)
+> Last updated: 2026-04-10 (Day 11 — deployed to Google Cloud Run)
 
 ## Build Complete — Pending Human Gates Only
 
@@ -128,7 +128,7 @@ All together:
   → Agent trades live on Kraken
   → Identity registered on Sepolia
   → Reputation posting on-chain every 100 ticks
-  → Dashboard deployed to Vercel
+  → Dashboard deployed to Google Cloud Run
   → Video recorded in demo mode
   → Submitted on lablab.ai
 ```
