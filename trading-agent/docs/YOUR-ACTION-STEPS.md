@@ -15,7 +15,7 @@ git push origin main
 This triggers Render auto-redeploy with the MockExecution fix. The "Failed deploy" / 71 errors should be gone.
 
 ### Step 2: Wake Render Backend
-After push, visit: https://trading-agent-95p9.onrender.com/metrics
+After push, visit: https://trading-agent-675072986521.us-central1.run.app/metrics
 
 - Free tier takes 1-2 min to spin up on first hit
 - You should see JSON with `"ticks":0, "errors":0`
@@ -23,13 +23,13 @@ After push, visit: https://trading-agent-95p9.onrender.com/metrics
 
 ### Step 3: Set Vercel Env Var
 1. Go to https://vercel.com → project `erc8004-trading-agent` → Settings → Environment Variables
-2. Add: `VITE_LOGS_URL` = `https://trading-agent-95p9.onrender.com`
+2. Add: `VITE_LOGS_URL` = `https://trading-agent-675072986521.us-central1.run.app`
 3. Click "Redeploy" (Production)
-4. Visit https://erc8004-trading-agent.vercel.app — dashboard should show live data
+4. Visit https://trading-dashboard-675072986521.us-central1.run.app — dashboard should show live data
 
 ### Step 4: Take Dashboard Screenshot
 Once dashboard shows data (price chart + trade log):
-1. Open https://erc8004-trading-agent.vercel.app in browser
+1. Open https://trading-dashboard-675072986521.us-central1.run.app in browser
 2. Wait for a few ticks to populate
 3. Screenshot the full page → save as `docs/screenshots/dashboard.png`
 4. Look for a trade with `"blocked_by_risk": true` in the trade log → screenshot that too → `docs/screenshots/risk-block.png`
@@ -110,9 +110,9 @@ If time allows, record a 3-5 min screen recording showing:
 After you've posted on X/LinkedIn, add the post URLs to the lablab.ai submission form under "Social Media Posts".
 
 ### Step 14: Final Checks
-- [ ] Dashboard is live and showing data: https://erc8004-trading-agent.vercel.app
-- [ ] Backend responds: `curl https://trading-agent-95p9.onrender.com/metrics`
-- [ ] Agent card works: `curl https://trading-agent-95p9.onrender.com/.well-known/agent-card.json`
+- [ ] Dashboard is live and showing data: https://trading-dashboard-675072986521.us-central1.run.app
+- [ ] Backend responds: `curl https://trading-agent-675072986521.us-central1.run.app/metrics`
+- [ ] Agent card works: `curl https://trading-agent-675072986521.us-central1.run.app/.well-known/agent-card.json`
 - [ ] GitHub repo is public: https://github.com/zixelfreelance/erc8004-trading-agent
 - [ ] Video is accessible: https://youtu.be/7zc0qDvCOKo
 - [ ] At least 3 X posts published
@@ -130,8 +130,8 @@ Click "Submit" on lablab.ai **before 7:30 PM IRST (16:00 UTC)**.
 | Long description | `docs/LABLAB-LONG-DESCRIPTION.md` |
 | Social posts | `docs/SOCIAL-MEDIA-POSTS.md` |
 | Terminal screenshots | `docs/screenshots/` |
-| Dashboard | https://erc8004-trading-agent.vercel.app |
-| Backend | https://trading-agent-95p9.onrender.com |
+| Dashboard | https://trading-dashboard-675072986521.us-central1.run.app |
+| Backend | https://trading-agent-675072986521.us-central1.run.app |
 | GitHub | https://github.com/zixelfreelance/erc8004-trading-agent |
 | lablab.ai | https://lablab.ai/ai-hackathons/ai-trading-agents/proof-of-trust/proof-of-trust-trading-agent |
 | Surge | https://early.surge.xyz/discovery/proofoftrust-agent |

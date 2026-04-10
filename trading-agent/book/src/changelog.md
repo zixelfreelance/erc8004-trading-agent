@@ -18,7 +18,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - **tx_hash backfill:** log records include on-chain tx hash from RiskRouter submission
 - **Sharpe ratio + win rate:** added to performance metrics and dashboard
 - **Regime tracking in metrics:** exposed via /metrics endpoint
-- **Agent card production URLs:** endpoints point to Render (`trading-agent-95p9.onrender.com`)
+- **Agent card production URLs:** endpoints point to Google Cloud Run (`trading-agent-675072986521.us-central1.run.app`)
 - **CI/CD pipeline:** GitHub Actions for test + fmt + clippy, auto-deploy to Render + Vercel
 - **mdBook docs site:** deployed to GitHub Pages (`zixelfreelance.github.io/erc8004-trading-agent`)
 - **ABI files:** `/abi/` directory with contract ABIs for ethers `abigen!`

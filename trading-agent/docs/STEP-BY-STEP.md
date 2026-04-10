@@ -49,7 +49,7 @@ git push -u origin main
    ```
    (Replace with the Railway domain from step above)
 6. Click **Deploy**
-7. You'll get a URL like: `https://erc8004-trading-agent.vercel.app`
+7. You'll get a URL like: `https://trading-dashboard-675072986521.us-central1.run.app`
 8. Visit it — you should see the dashboard pulling data from Railway backend
 
 ### Alternative: Vercel-Only (No Backend)

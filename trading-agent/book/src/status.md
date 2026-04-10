@@ -16,7 +16,7 @@ The agent is **fully wired** — chain adapters call real Sepolia contracts, IPF
 | IPFS pinning | ✅ Live | Agent card on startup + per-trade + periodic snapshots (Pinata) |
 | EIP-712 signing | ✅ Live | secp256k1 ECDSA with proper domain separator |
 | Agent card | ✅ Production URLs | Endpoints point to Render, not localhost |
-| Dashboard | ✅ Deployed | Vercel: erc8004-trading-agent.vercel.app |
+| Dashboard | ✅ Deployed | Vercel: trading-dashboard-675072986521.us-central1.run.app |
 | Backend | ⚠️ Sleeping | Render free tier goes idle — needs wake/redeploy |
 | Kraken live trading | ⏳ Blocked | Code ready, needs API key from friend |
 

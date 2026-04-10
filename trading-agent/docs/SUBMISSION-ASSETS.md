@@ -40,10 +40,9 @@
 - [x] **Slides HTML** — docs/slides.html (backup)
 
 ### App Hosting
-- [x] **Dashboard URL** — https://erc8004-trading-agent.vercel.app (Vercel)
-- [x] **Backend URL** — https://trading-agent-95p9.onrender.com (Render)
+- [x] **Dashboard URL** — https://trading-dashboard-675072986521.us-central1.run.app (Google Cloud Run)
+- [x] **Backend URL** — https://trading-agent-675072986521.us-central1.run.app (Google Cloud Run)
 - [x] **Docs URL** — https://zixelfreelance.github.io/erc8004-trading-agent/ (GitHub Pages)
-- [ ] ⚠️ Wake Render backend (currently 503 — free tier idle)
 
 ## Social Engagement (Kraken Prize)
 
@@ -68,4 +67,4 @@
 
 ## Deadline
 
-**April 12, 2026 — 7:30 PM IRST (≈16:00 UTC) — 7 days remaining**
+**April 12, 2026 — 7:30 PM IRST (≈16:00 UTC) — 2 days remaining**

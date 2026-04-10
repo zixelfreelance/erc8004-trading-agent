@@ -101,21 +101,25 @@ The agent is **feature-complete**. All code is written, tested, wired, and commi
 |---|---|---|
 | **Kraken API key** | Not done | No PnL on leaderboard = no Kraken prize |
 | **surge.xyz registration** | Not done | No prize eligibility at all |
-| **Foundry install** | Not done | Cannot compile/test/deploy Solidity contracts |
+| **Foundry install** | ✅ Done | Contracts compiled and tested |
 | **First social post** | Not done | Missing social engagement prize track |
-| **Sepolia wallet + ETH** | Not done | Cannot deploy contracts on-chain |
+| **Sepolia wallet + ETH** | ✅ Done | Contracts deployed on Sepolia |
 | **Pinata API key** | Not done | Cannot pin artifacts to IPFS |
 
-## What Happens When Human Gates Clear
+## What's Done
 
 ```
-Foundry installed:
-  → forge build (compiles 3 contracts)
-  → forge test (runs 13 Solidity tests)
-  → forge script Deploy.s.sol (deploys to Sepolia)
-  → Copy contract addresses to .env
-  → Chain adapters go from stub → live
+✅ Foundry installed → contracts compiled, tested, deployed to Sepolia
+✅ Backend deployed to Google Cloud Run (demo mode, running)
+✅ Dashboard deployed to Google Cloud Run
+✅ Demo video on YouTube
+✅ Project page on lablab.ai
+✅ 3 contracts verified on Sepolia Etherscan
+```
 
+## What Happens When Remaining Gates Clear
+
+```
 Kraken API key:
   → AGENT_EXECUTION_MODE=live AGENT_VOLUME=0.0001 cargo run
   → PnL accumulation starts on leaderboard
@@ -124,13 +128,8 @@ Kraken API key:
 surge.xyz:
   → Register project → eligible for prizes
 
-All together:
-  → Agent trades live on Kraken
-  → Identity registered on Sepolia
-  → Reputation posting on-chain every 100 ticks
-  → Dashboard deployed to Google Cloud Run
-  → Video recorded in demo mode
-  → Submitted on lablab.ai
+Pinata API key:
+  → IPFS artifact pinning for audit trail
 ```
 
 ## Session Commits

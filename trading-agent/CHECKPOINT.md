@@ -45,7 +45,7 @@
    - Key: `VITE_LOGS_URL`
    - Value: `http://127.0.0.1:3030`
 5. Click **Deploy**
-6. Wait ~1 min → copy the Vercel URL (e.g. `https://erc8004-trading-agent.vercel.app`)
+6. Wait ~1 min → copy the Vercel URL (e.g. `https://trading-dashboard-675072986521.us-central1.run.app`)
 
 > Note: The dashboard will show "connection error" when your local agent isn't running.
 > That's fine — during demo you run `cargo run` locally and it connects.

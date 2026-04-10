@@ -159,7 +159,7 @@ If the repo doesn't exist yet, create it at https://github.com/new:
 5. Under **Environment Variables**, add:
    - `VITE_LOGS_URL` = `http://127.0.0.1:3030` (placeholder — update after agent deploy)
 6. Click **Deploy**
-7. Copy the Vercel URL (e.g. `https://erc8004-trading-agent.vercel.app`)
+7. Copy the Vercel URL (e.g. `https://trading-dashboard-675072986521.us-central1.run.app`)
 
 ### Step 2.3: Deploy Agent Backend to Railway (free tier)
 

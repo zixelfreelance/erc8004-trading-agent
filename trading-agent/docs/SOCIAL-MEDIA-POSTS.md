@@ -82,7 +82,7 @@ Demo mode working. MIT licensed.
 
 @krakenfx @Surgexyz_ #AITradingAgents
 ```
-(Attach dashboard screenshot from erc8004-trading-agent.vercel.app)
+(Attach dashboard screenshot from trading-dashboard-675072986521.us-central1.run.app)
 
 ### Post 2.6 — Execution Modes Explainer (April 4)
 ```

@@ -6,17 +6,17 @@
   "services": [
     {
       "name": "trading-dashboard",
-      "endpoint": "https://trading-agent-95p9.onrender.com/logs",
+      "endpoint": "https://trading-agent-675072986521.us-central1.run.app/logs",
       "description": "Live trade log with decision artifacts, risk gate outcomes, and performance metrics"
     },
     {
       "name": "metrics",
-      "endpoint": "https://trading-agent-95p9.onrender.com/metrics",
+      "endpoint": "https://trading-agent-675072986521.us-central1.run.app/metrics",
       "description": "Real-time counters: ticks, trades executed, trades blocked, holds, errors"
     },
     {
       "name": "decision-schema",
-      "endpoint": "https://trading-agent-95p9.onrender.com/decision-schema",
+      "endpoint": "https://trading-agent-675072986521.us-central1.run.app/decision-schema",
       "description": "JSON Schema for the Decision type (Buy/Sell/Hold with confidence and reasoning)"
     }
   ],

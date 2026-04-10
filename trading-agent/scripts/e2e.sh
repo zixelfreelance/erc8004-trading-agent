@@ -6,8 +6,8 @@
 set -uo pipefail
 
 PASS=0; FAIL=0
-RENDER_URL="${RENDER_URL:-https://trading-agent-95p9.onrender.com}"
-VERCEL_URL="${VERCEL_URL:-https://erc8004-trading-agent.vercel.app}"
+RENDER_URL="${RENDER_URL:-https://trading-agent-675072986521.us-central1.run.app}"
+VERCEL_URL="${VERCEL_URL:-https://trading-dashboard-675072986521.us-central1.run.app}"
 SEPOLIA_RPC="${SEPOLIA_RPC:-https://rpc.sepolia.org}"
 
 check() {
@@ -38,8 +38,8 @@ has_code() {
 # ── Deployed tests ──────────────────────────────────────────────
 test_deployed() {
   echo "=== e2e: deployed targets ==="
-  echo "  Render: $RENDER_URL"
-  echo "  Vercel: $VERCEL_URL"
+  echo "  Backend: $RENDER_URL"
+  echo "  Dashboard: $VERCEL_URL"
   echo ""
 
   check "GET /metrics shape"               json_has_key "$RENDER_URL/metrics" "ticks"
